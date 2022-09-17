@@ -6,6 +6,9 @@ import {
   Bodies,
   Composite,
   Runner,
+  Constraint,
+  Vector,
+  Events,
 } from "matter-js";
 import React, {
   Ref,
@@ -22,7 +25,9 @@ export interface ContainerSize {
   height: number;
 }
 
+// @ts-ignore
 window.rotate = Body.rotate;
+// @ts-ignore
 window.setAngle = Body.setAngle;
 
 export const Play = () => {
@@ -40,18 +45,22 @@ export const Play = () => {
 
   useEffect(() => {
     const engine = Engine.create({});
+    Events.on(engine, "beforeUpdate", () => {
+      console.log("www");
+    });
+
     // fitScreen(boxRef);
-    const clientWidth = boxRef.current.clientWidth;
-    const clientHeight = boxRef.current.clientHeight;
-    let width, height;
-    if (clientHeight > (clientWidth * 3) / 4) {
-      width = clientWidth;
-      height = clientWidth * (3 / 4);
-    } else {
-      height = clientHeight;
-      width = clientHeight * (4 / 3);
-    }
     if (boxRef.current && canvasRef.current && !rendered) {
+      const clientWidth = boxRef.current.clientWidth;
+      const clientHeight = boxRef.current.clientHeight;
+      let width, height;
+      if (clientHeight > (clientWidth * 3) / 4) {
+        width = clientWidth;
+        height = clientWidth * (3 / 4);
+      } else {
+        height = clientHeight;
+        width = clientHeight * (4 / 3);
+      }
       console.log("o");
       setRendered(true);
       let render = Render.create({
@@ -117,6 +126,18 @@ export const Play = () => {
         }
       );
 
+      // var catapult = Bodies.rectangle(400, 520, 320, 20, { collisionFilter: { group: group } });
+      const catapult = Bodies.rectangle(
+        width / 2,
+        height * 0.9,
+        width * 0.85,
+        10,
+        {
+          render: { fillStyle: "gold" },
+        }
+      );
+      Body.setAngle(catapult, deg2rad(9));
+
       setBases([base1, base2, base3, base4]);
 
       const ball = Bodies.circle(150, 0, 20, {
@@ -125,7 +146,20 @@ export const Play = () => {
           fillStyle: "skyblue",
         },
       });
-      Composite.add(engine.world, [base1, base2, base3, base4, nanawariLine]);
+      Composite.add(engine.world, [
+        base1,
+        base2,
+        base3,
+        base4,
+        nanawariLine,
+        catapult,
+        Constraint.create({
+          bodyA: catapult,
+          pointB: Vector.clone(catapult.position),
+          stiffness: 1,
+          length: 0,
+        }),
+      ]);
       World.add(engine.world, [ball]);
 
       Render.run(render);
@@ -183,9 +217,13 @@ export const Play = () => {
         <button
           className="debug-btn"
           onClick={() => {
+            // @ts-ignore
             window.rotate(bases[0], 0.1);
+            // @ts-ignore
             window.rotate(bases[1], 0.1);
+            // @ts-ignore
             window.rotate(bases[2], 0.1);
+            // @ts-ignore
             window.rotate(bases[3], 0.1);
           }}
         >
@@ -194,9 +232,13 @@ export const Play = () => {
         <button
           className="debug-btn"
           onClick={() => {
+            // @ts-ignore
             window.rotate(bases[0], -0.1);
+            // @ts-ignore
             window.rotate(bases[1], -0.1);
+            // @ts-ignore
             window.rotate(bases[2], -0.1);
+            // @ts-ignore
             window.rotate(bases[3], -0.1);
           }}
         >
