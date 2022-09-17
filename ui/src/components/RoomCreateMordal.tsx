@@ -30,7 +30,7 @@ export const RoomCreateMordal = ({setRoomId, setMyId, setFriendId,setDialogDispl
     <div className="overflow-y-auto overflow-x-hidden fixed z-50 p-16 h-full w-full top-0 right-0 left-0 drop-shadow-2xl">
       <div className=" bg-white h-full p-20">
         <div>
-          <p className="text-base leading-relaxed text-gray-900 font-bold">ともだちとおなじ「あいことば」をきめてね！</p>
+          <p className="text-base leading-relaxed text-gray-900 font-bold">ともだちとおなじ「3文字のあいことば」をきめてね！</p>
         </div>
         <input className="border-solid border-2 w-full mt-4 border-gray-500" type="text" ref={inputRef} placeholder="" />
         <div className="flex justify-between">
