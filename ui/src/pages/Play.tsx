@@ -247,7 +247,17 @@ export const Play: React.FC<{
       Body.applyForce(
         seesaw as Body,
         Vector.create(0, 0),
-        Vector.create(0, (position - 0.5) * FORCE_FACTOR)
+        Vector.create(
+          0,
+          ((position -
+            0.5 +
+            Object.values(mates).reduce(
+              (acc, cur) => acc + (parseFloat(cur.position) - 0.5),
+              0
+            )) /
+            (1 + Object.values(mates).length)) *
+            FORCE_FACTOR
+        )
       );
     }
   }, [position]);
@@ -292,6 +302,7 @@ export const Play: React.FC<{
       ),
     ];
   };
+  console.log(myId);
   // useEffect once
   useEffect(() => {
     let socket;
@@ -311,7 +322,6 @@ export const Play: React.FC<{
         console.log("connection error:", err);
       };
     }
-
     const engine = Engine.create({});
     globalEngine = engine;
     Events.on(engine, "beforeUpdate", () => {
