@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { PlayDescriptionMordal } from "../components/PlayDescriptionMordal"
 import { RoomCreateMordal } from "../components/RoomCreateMordal"
 
-export const Start = ({setMyId, setFriendId}) => {
+export const Start = ({setMyId, setFriendId, setRoomId}) => {
   const [dialogDisplayState, setDialogDisplayState] = useState(false)
   const [showPlayDescription, setShowPlayDescription] = useState(false)
   const [roomCreateMordalDisplayState, setRoomCreateMordalDisplayState] = useState(false)
@@ -20,7 +20,7 @@ export const Start = ({setMyId, setFriendId}) => {
   return (
     <>
     {showPlayDescription && <PlayDescriptionMordal setDialogDisplayState = {setDialogDisplayState} setShowPlayDescription={setShowPlayDescription} />}
-    {roomCreateMordalDisplayState && <RoomCreateMordal setFriendId = {setFriendId} setMyId={setMyId} setDialogDisplayState = {setDialogDisplayState} setRoomCreateMordalDisplayState={setRoomCreateMordalDisplayState}/> }
+    {roomCreateMordalDisplayState && <RoomCreateMordal setRoomId={setRoomId} setFriendId = {setFriendId} setMyId={setMyId} setDialogDisplayState = {setDialogDisplayState} setRoomCreateMordalDisplayState={setRoomCreateMordalDisplayState}/> }
      <div className="flex p-20 h-screen bg-white">
       <div className="flex-1">プレイ画像サンプル領域</div>
       <ul className="flex-1 flex flex-col justify-between py-20">

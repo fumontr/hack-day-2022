@@ -1,7 +1,7 @@
 import { useRef } from "react"
 import { useNavigate } from "react-router-dom";
 
-export const RoomCreateMordal = ({setMyId, setFriendId,setDialogDisplayState, setRoomCreateMordalDisplayState}) => {
+export const RoomCreateMordal = ({setRoomId, setMyId, setFriendId,setDialogDisplayState, setRoomCreateMordalDisplayState}) => {
   let navigate = useNavigate();
     
   const requestOptions = {
@@ -22,6 +22,7 @@ export const RoomCreateMordal = ({setMyId, setFriendId,setDialogDisplayState, se
       }
       setDialogDisplayState(false)
       setRoomCreateMordalDisplayState(false)
+      setRoomId(data.password)
       navigate(`/play`);
     }).catch(err => console.log(err));
   }
