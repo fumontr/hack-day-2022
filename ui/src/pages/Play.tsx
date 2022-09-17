@@ -27,6 +27,7 @@ import {
   rad2deg,
 } from "../lib/lib";
 import { default as ml5, Pose, PosePose } from "ml5";
+import * as WebSocket from "websocket";
 
 const ballBasesWorld: Matter.ICollisionFilter = {
   category: 0b01,
@@ -44,12 +45,32 @@ const videoConstraints = {
   facingMode: "user",
 };
 
+const SOCKET_URL =
+  "wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/connect";
+
+const FRICTION_STATIC = 0;
+const FRICTION = 0;
+const RESTITUTION = 0;
+
+const BALL_MASS = 100;
+
+const SEESAW_MASS = 10000;
+const SEESAW_INERTIA = 1000000;
+
+const FORCE_FACTOR = 0.18;
+
+let seesaw: Body;
+let globalEngine: Engine;
+let poseNet;
+let count = 0;
+
+const THRESHOLD = 0.4;
+
 const findPosition = (poses: PosePose[], windowWidth: number) => {
   for (let i = 0; i < poses.length; i++) {
     let pose = poses[i].pose;
     for (let j = 0; j < pose.keypoints.length; j++) {
-      const threshold = 0.4;
-      let position = confirmPosition(pose, threshold, windowWidth);
+      let position = confirmPosition(pose, THRESHOLD, windowWidth);
       // 多分このforを全部回せば複数人対応できる
       return position;
     }
@@ -126,23 +147,8 @@ const confirmPosition = (pose: Pose, threshold: number, width: number) => {
     let xPersentage = center / width;
     return xPersentage;
   }
+  return null;
 };
-
-const FRICTION_STATIC = 0;
-const FRICTION = 0;
-const RESTITUTION = 0;
-
-const BALL_MASS = 100;
-
-const SEESAW_MASS = 10000;
-const SEESAW_INERTIA = 1000000;
-
-const FORCE_FACTOR = 0.18;
-
-let seesaw: Body;
-let globalEngine: Engine;
-let poseNet;
-let count = 0;
 
 const ballOption = {
   restitution: RESTITUTION,
@@ -159,6 +165,7 @@ export const Play = (myId) => {
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const webcamRef = useRef<Webcam>(null);
+  const socket = new WebSocket.w3cwebsocket(SOCKET_URL);
 
   const [scene, setScene] = useState<Render | undefined>(undefined);
   const [currentAngle, setCurrentAngle] = useState<number>(0);
@@ -188,6 +195,7 @@ export const Play = (myId) => {
       );
     }
   }, [position]);
+
   const getGoalBodies = (position: ContainerSize): Body[] => {
     const { width, height } = position;
     const LINE_WIDTH = height * 0.0075;
@@ -230,6 +238,17 @@ export const Play = (myId) => {
   };
   // useEffect once
   useEffect(() => {
+    console.log("use effect");
+    socket.onopen = () => {
+      console.log("connected");
+    };
+    socket.onclose = () => {
+      console.log("reconnecting...");
+    };
+    socket.onerror = (err) => {
+      console.log("connection error:", err);
+    };
+
     const engine = Engine.create({});
     globalEngine = engine;
     Events.on(engine, "beforeUpdate", () => {
@@ -424,6 +443,7 @@ export const Play = (myId) => {
             bottom:
               displaySize.height * 0.1 +
               Math.sin(currentAngle) * displaySize.width * (position - 0.5),
+            // ポジションの正規化しようとしたけどできてない
             left: `${
               Math.round(
                 ((document.body.clientWidth - displaySize.width) / 2 +

@@ -10,7 +10,7 @@ const videoConstraints = {
   frameRate: { ideal: 3, max: 3 }
 };
 
-const SOCKET_URL = "wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/ws";
+const SOCKET_URL = "wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/connect";
 
 export const VideoSample = () => {
   const socket = new WebSocket.w3cwebsocket(SOCKET_URL);
