@@ -3,3 +3,7 @@
 server/_secret
 
 server/tmp
+
+.DS_Store
+
+server/.DS_Store

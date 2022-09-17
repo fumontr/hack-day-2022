@@ -2,6 +2,19 @@
 
 パンの耳のバックエンドです。
 
+## API
+- POST /rooms
+  - 部屋新規作成
+  - ResponseでRoomId, Passwordを返す
+- POST /rooms/:id/join
+  - RoomIdを渡して部屋に入る。
+  - jsonで新規作成時に受け取ったpasswordを渡す必要あり
+- POST /rooms/:id/exit
+  - RoomIdを渡して部屋から出る。
+  - 0人以下になる場合はエラーを返す。
+- DELETE /rooms/:id 
+  - 必要無くなった部屋を削除する。
+
 ## Local 起動方法
 - 前提条件
   - Golang 1.18
