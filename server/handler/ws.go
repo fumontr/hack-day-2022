@@ -11,7 +11,7 @@ import (
 var (
 	upgrader  = websocket.Upgrader{}
 	broadcast = make(chan model.Movement)
-	clients   = make(map[string]map[model.Connection]bool)
+	clients   = make(map[string]model.Connections, 0)
 )
 
 func WebsocketSample(c echo.Context) error {
@@ -48,7 +48,23 @@ func ConnectWebsocket(c echo.Context) error {
 	}
 	defer ws.Close()
 
-	clients[id][model.Connection{RoomID: id, Conn: ws}] = true
+	//fmt.Printf("len(clients[id]): %+v\n", len(clients[id]))
+	//if len(clients[id]) == 0 {
+	//	conns := make(map[model.Connection]bool, 0)
+	//	conns[model.Connection{RoomID: id, Conn: ws}] = true
+	//	clients[id] = conns
+	//} else {
+	//	clients[id][model.Connection{RoomID: id, Conn: ws}] = true
+	//}
+	firstTime := true
+	for _, v := range clients[id] {
+		if v.Conn == ws {
+			firstTime = false
+		}
+	}
+	if firstTime {
+		clients[id] = append(clients[id], model.Connection{RoomID: id, Conn: ws})
+	}
 
 	for {
 		var movement model.Movement
@@ -67,13 +83,12 @@ func HandleMessage() {
 		// broadcastチャネルからメッセージを受け取る
 		message := <-broadcast
 		// 接続中の全クライアントにメッセージを送る
-		for _, client := range clients {
-			for c := range client {
-				err := c.Conn.WriteJSON(message)
+		for _, v := range clients {
+			for _, vv := range v {
+				err := vv.Conn.WriteJSON(message)
 				if err != nil {
 					log.Printf("error: %v", err)
-					c.Conn.Close()
-					delete(client, c)
+					vv.Conn.Close()
 				}
 			}
 		}

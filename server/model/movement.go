@@ -7,6 +7,7 @@ type Movement struct {
 	PositionX  string `json:"position_x"`
 	RoomStatus string `json:"room_status"` // Playing, Success, Failed
 	Ball       Ball   `json:"ball"`
+	RoomID     string `json:"room_id"`
 }
 
 type Ball struct {
