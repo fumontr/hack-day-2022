@@ -30,6 +30,7 @@ import { default as ml5, Pose, PosePose } from "ml5";
 import * as WebSocket from "websocket";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Mode } from "../App";
+import {Box} from "@chakra-ui/react";
 
 const ballBasesWorld: Matter.ICollisionFilter = {
   category: 0b01,
@@ -307,7 +308,7 @@ export const Play: React.FC<{
         engine: engine,
         canvas: canvasRef.current,
         options: {
-          background: "#f9fbe7",
+          background: "#D2FFFF",
           wireframes: false,
         },
       });
@@ -469,7 +470,7 @@ export const Play: React.FC<{
 
   return (
     <>
-      <div
+      <Box
         ref={boxRef}
         style={{
           position: "absolute",
@@ -520,7 +521,7 @@ export const Play: React.FC<{
             }}
           />
         </div>
-      </div>
+      </Box>
       <div style={{ zIndex: "999999", position: "absolute", top: 0, left: 0 }}>
         <button
           className="debug-btn"
