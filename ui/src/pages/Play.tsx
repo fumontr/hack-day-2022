@@ -178,21 +178,24 @@ export const Play: React.FC<{
   mode: Mode;
   setMode: (mode: Mode) => void;
 }> = ({ myId, roomId, mode, setMode }) => {
+  // console.log("======");
+  // console.log(myId, roomId);
   const { search } = useLocation();
   const query2 = new URLSearchParams(search);
   const roomIdFromParam = query2.get("room");
   const navigate = useNavigate();
   if (roomIdFromParam !== roomId) {
     // 個人モードここで実装
-    navigate("/");
+    // console.log("ざんねん！");
+    // navigate("/");
   }
-  if (roomId) {
-    var searchParams = new URLSearchParams(window.location.search);
-    searchParams.set("room", roomId);
-    window.location.search = searchParams.toString();
-  } else {
-    // no room, 個人プレイ mode
-  }
+  // if (roomId) {
+  //   var searchParams = new URLSearchParams(window.location.search);
+  //   searchParams.set("room", roomId);
+  //   window.location.search = searchParams.toString();
+  // } else {
+  //   // no room, 個人プレイ mode
+  // }
   // console.log(search);
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -209,16 +212,12 @@ export const Play: React.FC<{
   });
 
   useEffect(() => {
-    // console.log(roomId);
-    // console.log(friendId);
-    // console.log(myId);
     bases.forEach((base) => {
       Body.setAngle(base, currentAngle);
     });
   }, [currentAngle]);
 
   useEffect(() => {
-    // console.log(myId);
     count++;
     if (position && seesaw && count == 6) {
       count = 0;
@@ -449,7 +448,7 @@ export const Play: React.FC<{
         poseNet.on("pose", function (poses: PosePose[]) {
           let position = findPosition(poses, videoConstraints.width);
           setPosition(position ?? 0.5);
-          if (mode === "Together" && myId) {
+          if (mode === "Together" && myId && position) {
             const info: PositionInfo = {
               user_id: myId,
               position_x: position ?? 0.5,
@@ -459,8 +458,8 @@ export const Play: React.FC<{
           }
         });
         if (mode === "Together") {
-          globalSocket.onmessage = (msg) => {
-            console.log(msg);
+          globalSocket.onmessage = (msg: WebSocket.IMessageEvent) => {
+            const data = JSON.parse(msg.data.toString()) as PositionInfo;
           };
         }
       };
