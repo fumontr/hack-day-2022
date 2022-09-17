@@ -15,16 +15,25 @@ import { Mode } from "../App";
 
 type RoomCreateModalProps = {
   enterRoomOpen: boolean;
-  onEnterRoomOpen: () => void;
   onEnterRoomClose: () => void;
   setRoomId: (roomId: string) => void;
   setMyId: (myId: string) => void;
   setMode: React.Dispatch<React.SetStateAction<Mode>>;
 };
 
+export type RoomInfo = {
+  id: string; // あああ とか
+  user_count: number;
+  password: string;
+  status: "Waiting";
+  users: string[];
+  user: {
+    id: string;
+  };
+};
+
 export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
   enterRoomOpen,
-  onEnterRoomOpen,
   onEnterRoomClose,
   setRoomId,
   setMyId,
@@ -43,20 +52,21 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
     // hiragana regex
     if (!/^[\u3040-\u309F]+$/.test(val))
       return alert("あいことばは、ひらがなだよ！");
-    return fetch(
-      `https://backend-dot-hack-day-2022-362804.de.r.appspot.com/rooms/${val}/join`,
-      requestOptions
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("=====");
-        console.log(data);
-        setMyId(data.user.id);
-        setRoomId(data.password);
-        setMode("Together");
-        navigate(`/play`);
-      })
-      .catch((err) => alert(`couldn't fetch room info. ${err}`));
+
+    try {
+      const res = await fetch(
+        `https://backend-dot-hack-day-2022-362804.de.r.appspot.com/rooms/${val}/join`,
+        requestOptions
+      );
+      const data = (await res.json()) as RoomInfo;
+      console.log(data);
+      setMyId(data.user.id);
+      setRoomId(data.id);
+      setMode("Together");
+      navigate(`/play`);
+    } catch (error) {
+      alert(`couldn't fetch room info. ${error}`);
+    }
   };
   return (
     <Modal size={"2xl"} isOpen={enterRoomOpen} onClose={onEnterRoomClose}>
@@ -73,7 +83,7 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
           />
         </ModalBody>
         <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={close}>
+          <Button type="button" colorScheme="blue" mr={3} onClick={close}>
             進む
           </Button>
         </ModalFooter>
