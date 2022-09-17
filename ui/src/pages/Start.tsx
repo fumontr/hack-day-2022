@@ -15,6 +15,7 @@ import { Flex, HStack, Text, Stack } from "@chakra-ui/react";
 import BackgroundImage from "../assets/background.png";
 import { Mode } from "../App";
 import { useNavigate } from "react-router-dom";
+import { PlayDescriptionModal } from "../components/PlayDescriptionModal";
 
 export const Start: React.FC<{
   setMyId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -47,19 +48,7 @@ export const Start: React.FC<{
 
   return (
     <>
-      <Modal isOpen={howToOpen} onClose={onHowToClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>遊びかた？</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>ああ</ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onHowToClose}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <PlayDescriptionModal howToOpen={howToOpen} onHowToClose={onHowToClose} />
       <RoomCreateModal
         enterRoomOpen={enterRoomOpen}
         onEnterRoomOpen={onEnterRoomOpen}

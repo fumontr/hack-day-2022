@@ -44,7 +44,7 @@ const seesawFLoorWorld: Matter.ICollisionFilter = {
 export type Status = "Playing" | "Waiting" | "Success" | "Failure";
 
 export type PositionInfo = {
-  user_id: number;
+  user_id: string;
   position_x: number;
   room_status: Status;
 };
@@ -449,14 +449,13 @@ export const Play: React.FC<{
         poseNet.on("pose", function (poses: PosePose[]) {
           let position = findPosition(poses, videoConstraints.width);
           setPosition(position ?? 0.5);
-          if (mode === "Together") {
+          if (mode === "Together" && myId) {
             const info: PositionInfo = {
               user_id: myId,
               position_x: position ?? 0.5,
               room_status: "Playing",
             };
-            // create DTO
-            // globalSocket.send(JSON.stringify(""));
+            globalSocket.send(JSON.stringify(info));
           }
         });
         if (mode === "Together") {
