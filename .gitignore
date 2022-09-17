@@ -1,2 +1,5 @@
 .idea/
 
+server/_secret
+
+server/tmp
