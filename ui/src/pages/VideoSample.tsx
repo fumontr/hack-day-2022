@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import Webcam from "react-webcam";
-import * as ml5 from "ml5";
+import { default as ml5, Pose, PosePose } from "ml5";
 import * as WebSocket from "websocket";
 
 const videoConstraints = {
@@ -71,8 +71,9 @@ export const VideoSample = () => {
     </>
   );
 };
-
-function findPositon(poses, windowWidth)  {
+//
+function findPositon(poses: PosePose[], windowWidth: number) {
+  // console.log(poses);
   for (let i = 0; i < poses.length; i++) {
     let pose = poses[i].pose;
     for (let j = 0; j < pose.keypoints.length; j++) {
@@ -84,40 +85,55 @@ function findPositon(poses, windowWidth)  {
   }
 }
 
-const confirmPosition = (pose, threshold, width) => {
+const confirmPosition = (pose: Pose, threshold: number, width: number) => {
   // 両肩
-  if(pose.leftShoulder.confidence > threshold && pose.rightShoulder.confidence  > threshold) {
+  if (
+    pose.leftShoulder.confidence > threshold &&
+    pose.rightShoulder.confidence > threshold
+  ) {
     let center = (pose.leftShoulder.x + pose.rightShoulder.x) / 2;
     let xPersentage = center / width;
     return xPersentage;
   }
   // 両腰
-  if(pose.leftHip.confidence > threshold && pose.rightHip.confidence  > threshold) {
+  if (
+    pose.leftHip.confidence > threshold &&
+    pose.rightHip.confidence > threshold
+  ) {
     let center = (pose.leftHip.x + pose.rightHip.x) / 2;
     let xPersentage = center / width;
     return xPersentage;
   }
   // 両膝
-  if(pose.leftKnee.confidence > threshold && pose.rightKnee.confidence  > threshold) {
+  if (
+    pose.leftKnee.confidence > threshold &&
+    pose.rightKnee.confidence > threshold
+  ) {
     let center = (pose.leftKnee.x + pose.rightKnee.x) / 2;
     let xPersentage = center / width;
     return xPersentage;
   }
   // 片肩
-  if(pose.leftShoulder.confidence > threshold && pose.rightShoulder.confidence  > threshold) {
+  if (
+    pose.leftShoulder.confidence > threshold &&
+    pose.rightShoulder.confidence > threshold
+  ) {
     let center = null;
-    if(pose.leftShoulder.confidence > pose.rightShoulder.confidence){
+    if (pose.leftShoulder.confidence > pose.rightShoulder.confidence) {
       center = pose.leftShoulder.x;
     } else {
-      center =pose.rightShoulder.x;
+      center = pose.rightShoulder.x;
     }
     let xPersentage = center / width;
     return xPersentage;
   }
   // 片腰
-  if(pose.leftHip.confidence > threshold && pose.rightHip.confidence  > threshold) {
+  if (
+    pose.leftHip.confidence > threshold &&
+    pose.rightHip.confidence > threshold
+  ) {
     let center = null;
-    if(pose.leftHip.confidence > pose.rightHip.confidence){
+    if (pose.leftHip.confidence > pose.rightHip.confidence) {
       center = pose.leftHip.x;
     } else {
       center = pose.rightHip.x;
@@ -126,9 +142,12 @@ const confirmPosition = (pose, threshold, width) => {
     return xPersentage;
   }
   // 片膝
-  if(pose.leftKnee.confidence > threshold && pose.rightKnee.confidence  > threshold) {
+  if (
+    pose.leftKnee.confidence > threshold &&
+    pose.rightKnee.confidence > threshold
+  ) {
     let center = null;
-    if(pose.leftKnee.confidence > pose.rightKnee.confidence){
+    if (pose.leftKnee.confidence > pose.rightKnee.confidence) {
       center = pose.leftKnee.x;
     } else {
       center = pose.rightKnee.x;
@@ -136,4 +155,4 @@ const confirmPosition = (pose, threshold, width) => {
     let xPersentage = center / width;
     return xPersentage;
   }
-}  
+};

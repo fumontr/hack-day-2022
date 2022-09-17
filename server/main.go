@@ -4,6 +4,7 @@ import (
 	"furiko/hack-day-2022/handler"
 	"furiko/hack-day-2022/repository"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"net/http"
 	"os"
 )
@@ -11,6 +12,8 @@ import (
 func main() {
 	addr := ":8080"
 	e := echo.New()
+	e.Use(middleware.CORS())
+
 	repository.InitClient()
 	// テスト用
 	e.GET("/", func(c echo.Context) error {
@@ -19,8 +22,11 @@ func main() {
 
 	// ws
 	{
-		e.GET("/ws", handler.Ws)
+		e.GET("/ws", handler.WebsocketSample)
+		e.GET("/connect", handler.ConnectWebsocket)
 	}
+
+	go handler.HandleMessage()
 
 	// room
 	{
