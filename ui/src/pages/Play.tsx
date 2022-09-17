@@ -122,7 +122,7 @@ let globalEngine: Engine;
 let poseNet;
 let count = 0;
 
-export const Play = () => {
+export const Play = (myId) => {
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef(null);
   const [containerSize, setContainerSize] = useState<ContainerSize | undefined>(
@@ -135,6 +135,7 @@ export const Play = () => {
   const [position, setPosition] = useState<number>(0.5);
 
   useEffect(() => {
+    console.log(myId)
     bases.forEach((base) => {
       Body.setAngle(base, currentAngle);
     });
