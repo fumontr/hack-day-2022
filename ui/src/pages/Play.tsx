@@ -10,6 +10,7 @@ import {
   Vector,
   Events,
 } from "matter-js";
+import ManBack from "../assets/man_back.png";
 import React, {
   Ref,
   RefObject,
@@ -19,7 +20,12 @@ import React, {
   useState,
 } from "react";
 import Webcam from "react-webcam";
-import { deg2rad, getWidthHeightFromRef, rad2deg } from "../lib/lib";
+import {
+  ContainerSize,
+  deg2rad,
+  getWidthHeightFromRef,
+  rad2deg,
+} from "../lib/lib";
 import { default as ml5, Pose, PosePose } from "ml5";
 
 const ballBasesWorld: Matter.ICollisionFilter = {
@@ -136,6 +142,10 @@ export const Play = () => {
   const [currentAngle, setCurrentAngle] = useState<number>(0);
   const [bases, setBases] = useState<Body[]>([]);
   const [position, setPosition] = useState<number>(0.5);
+  const [displaySize, setDisplaySize] = useState<ContainerSize>({
+    width: 0,
+    height: 0,
+  });
 
   useEffect(() => {
     bases.forEach((base) => {
@@ -166,6 +176,7 @@ export const Play = () => {
     });
     if (boxRef.current && canvasRef.current) {
       const { width, height } = getWidthHeightFromRef(boxRef);
+      setDisplaySize({ width, height });
 
       const BAR_WIDTH = width * 0.5;
       const BAR_HEIGHT = 3;
@@ -191,7 +202,7 @@ export const Play = () => {
         return Bodies.rectangle(width * x, height * y, BAR_WIDTH, BAR_HEIGHT, {
           isStatic: true,
           render: { fillStyle: "#060a19" },
-          collisionFilter: { group: 7 },
+          collisionFilter: ballBasesWorld,
         });
       });
 
@@ -251,7 +262,7 @@ export const Play = () => {
 
   useEffect(() => {
     if (scene && boxRef.current) {
-      const { width, height } = getWidthHeightFromRef(boxRef);
+      const { width, height } = displaySize;
       // Dynamically update canvas and bounds
       scene.bounds.max.x = width;
       scene.bounds.max.y = height;
@@ -308,7 +319,35 @@ export const Play = () => {
           alignItems: "center",
         }}
       >
-        <canvas id="mainCanvas" ref={canvasRef} style={{ zIndex: 10 }} />
+        <canvas
+          id="mainCanvas"
+          ref={canvasRef}
+          style={{ zIndex: 10, position: "relative" }}
+        />
+        <div
+          className="me"
+          style={{
+            position: "absolute",
+            bottom:
+              displaySize.height * 0.1 +
+              Math.sin(currentAngle) * displaySize.width * (position - 0.5),
+            left: `${
+              (document.body.clientWidth - displaySize.width) / 2 +
+              displaySize.width / 2 +
+              (0.5 - position) * displaySize.width
+            }px`,
+            height: "80px",
+            // width: "50px",
+            transform: "translateX(-50%)",
+            zIndex: "99999",
+          }}
+        >
+          <img
+            src={ManBack}
+            alt=""
+            style={{ height: "100%", width: "100%", objectFit: "contain" }}
+          />
+        </div>
       </div>
       <div style={{ zIndex: "99999", position: "absolute", top: 0, left: 0 }}>
         <button
@@ -325,30 +364,6 @@ export const Play = () => {
           }}
         >
           add ball
-        </button>
-        <button
-          className="debug-btn"
-          onClick={() => {
-            Body.applyForce(
-              seesaw as Body,
-              Vector.create(0, 0),
-              Vector.create(0, -0.01)
-            );
-          }}
-        >
-          seesaw+
-        </button>
-        <button
-          className="debug-btn"
-          onClick={() => {
-            Body.applyForce(
-              seesaw as Body,
-              Vector.create(0, 0),
-              Vector.create(0, 0.01)
-            );
-          }}
-        >
-          seesaw-
         </button>
         <p style={{ background: "pink", border: "2px solid red" }}>
           {Math.round(position * 100) / 100 ? (
