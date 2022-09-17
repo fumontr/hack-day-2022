@@ -33,8 +33,6 @@ export const Start: React.FC<{
 
   const onClickRoomCreate = () => {
     onEnterRoomOpen();
-    // setRoomCreateMordalDisplayState(true);
-    // setDialogDisplayState(true);
   };
 
   return (
