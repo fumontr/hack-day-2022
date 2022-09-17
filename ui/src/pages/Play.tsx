@@ -28,6 +28,7 @@ import {
 } from "../lib/lib";
 import { default as ml5, Pose, PosePose } from "ml5";
 import * as WebSocket from "websocket";
+import { useLocation } from "react-router-dom";
 
 const ballBasesWorld: Matter.ICollisionFilter = {
   category: 0b01,
@@ -175,6 +176,11 @@ export const Play: React.FC<{
   roomId: string;
   friendId: number;
 }> = ({ myId, roomId, friendId }) => {
+  // let query = useQuery();
+  const { search } = useLocation();
+  const query2 = new URLSearchParams(search);
+  const room = query2.get("room");
+  // console.log(search);
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const webcamRef = useRef<Webcam>(null);
