@@ -33,11 +33,12 @@ export const Play = () => {
   const [scene, setScene] = useState<Render | undefined>(undefined);
   const [currentAngle, setCurrentAngle] = useState<number>(0);
   const STATIC_DENSITY = 15;
-  const [engine] = useState(Engine.create({}));
+  // const [engine] = useState(Engine.create({}));
   const [bases, setBases] = useState<Matter.Body[]>([]);
   const [rendered, setRendered] = useState(false);
 
   useEffect(() => {
+    const engine = Engine.create({});
     // fitScreen(boxRef);
     const clientWidth = boxRef.current.clientWidth;
     const clientHeight = boxRef.current.clientHeight;
@@ -62,22 +63,58 @@ export const Play = () => {
         },
       });
       console.log({ width, height });
-      const base1 = Bodies.rectangle(width * 0.5, height * 0.1, 400, 20, {
-        isStatic: true,
-        render: { fillStyle: "#060a19" },
-      });
-      const base2 = Bodies.rectangle(width * 0.6, height * 0.3, 400, 20, {
-        isStatic: true,
-        render: { fillStyle: "#060a19" },
-      });
-      const base3 = Bodies.rectangle(width * 0.6, height * 0.5, 400, 20, {
-        isStatic: true,
-        render: { fillStyle: "#060a19" },
-      });
-      const base4 = Bodies.rectangle(width * 0.6, height * 0.6, 400, 20, {
-        isStatic: true,
-        render: { fillStyle: "#060a19" },
-      });
+      const BAR_WIDTH = width * 0.6;
+      const BAR_HEIGHT = 3;
+      const base1 = Bodies.rectangle(
+        width * 0.85,
+        height * 0.1,
+        BAR_WIDTH,
+        BAR_HEIGHT,
+        {
+          isStatic: true,
+          render: { fillStyle: "#060a19" },
+        }
+      );
+      const base2 = Bodies.rectangle(
+        width * 0.15,
+        height * 0.2,
+        BAR_WIDTH,
+        BAR_HEIGHT,
+        {
+          isStatic: true,
+          render: { fillStyle: "#060a19" },
+        }
+      );
+      const base3 = Bodies.rectangle(
+        width * 0.85,
+        height * 0.4,
+        BAR_WIDTH,
+        BAR_HEIGHT,
+        {
+          isStatic: true,
+          render: { fillStyle: "#060a19" },
+        }
+      );
+      const base4 = Bodies.rectangle(
+        width * 0.15,
+        height * 0.6,
+        BAR_WIDTH,
+        BAR_HEIGHT,
+        {
+          isStatic: true,
+          render: { fillStyle: "#060a19" },
+        }
+      );
+      const nanawariLine = Bodies.rectangle(
+        width / 2,
+        height * 0.7,
+        width,
+        BAR_HEIGHT,
+        {
+          isStatic: true,
+          render: { fillStyle: "grey" },
+        }
+      );
 
       setBases([base1, base2, base3, base4]);
 
@@ -87,20 +124,21 @@ export const Play = () => {
           fillStyle: "skyblue",
         },
       });
-      Composite.add(engine.world, [base1, base2, base3, base4]);
+      Composite.add(engine.world, [base1, base2, base3, base4, nanawariLine]);
       World.add(engine.world, [ball]);
 
-      Runner.run(engine);
       Render.run(render);
+      // create runner
+      var runner = Runner.create();
+      // run the engine
+      Runner.run(runner, engine);
+      // Runner.run(engine);
       setScene(render);
     }
-    return () => {
-      // cleanup here
-    };
   }, []);
 
   useEffect(() => {
-    if (scene) {
+    if (scene && boxRef.current) {
       const clientWidth = boxRef.current.clientWidth;
       const clientHeight = boxRef.current.clientHeight;
       let width, height;
