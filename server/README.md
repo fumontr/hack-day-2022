@@ -23,8 +23,8 @@ brew install httpie
   
 ### サーバの起動 
 ```bash
-cd server/
-go run main.go
+make build
+make run
 ```
 
 ### サーバを叩いてみる
