@@ -39,14 +39,22 @@ const seesawFLoorWorld: Matter.ICollisionFilter = {
   mask: 0b10,
 };
 
+export type Status = "Playing" | "Waiting" | "Success" | "Failure";
+
+export type PositionInfo = {
+  user_id: number;
+  position_x: number;
+  room_status: Status;
+};
+
 const videoConstraints = {
   width: 720,
   height: 360,
   facingMode: "user",
+  frameRate: { ideal: 5, max: 5 },
 };
 
-const SOCKET_URL =
-  "wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/connect";
+const SOCKET_URL = "wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/ws";
 
 const FRICTION_STATIC = 0;
 const FRICTION = 0;
@@ -61,6 +69,7 @@ const FORCE_FACTOR = 0.18;
 
 let seesaw: Body;
 let globalEngine: Engine;
+let globalSocket: WebSocket.w3cwebsocket;
 let poseNet;
 let count = 0;
 
@@ -161,11 +170,14 @@ const ballOption = {
   collisionFilter: ballBasesWorld,
 };
 
-export const Play = ({roomId, myId, friendId}) => {
+export const Play: React.FC<{
+  myId: number;
+  roomId: string;
+  friendId: number;
+}> = ({ myId, roomId, friendId }) => {
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const webcamRef = useRef<Webcam>(null);
-  const socket = new WebSocket.w3cwebsocket(SOCKET_URL);
 
   const [scene, setScene] = useState<Render | undefined>(undefined);
   const [currentAngle, setCurrentAngle] = useState<number>(0);
@@ -178,15 +190,16 @@ export const Play = ({roomId, myId, friendId}) => {
   });
 
   useEffect(() => {
-    console.log(roomId)
-    console.log(friendId)
-    console.log(myId)
+    console.log(roomId);
+    console.log(friendId);
+    console.log(myId);
     bases.forEach((base) => {
       Body.setAngle(base, currentAngle);
     });
   }, [currentAngle]);
 
   useEffect(() => {
+    console.log(myId);
     count++;
     if (position && seesaw && count == 6) {
       count = 0;
@@ -240,6 +253,8 @@ export const Play = ({roomId, myId, friendId}) => {
   };
   // useEffect once
   useEffect(() => {
+    const socket = new WebSocket.w3cwebsocket(SOCKET_URL);
+    globalSocket = socket;
     console.log("use effect");
     socket.onopen = () => {
       console.log("connected");
@@ -412,7 +427,17 @@ export const Play = ({roomId, myId, friendId}) => {
         poseNet.on("pose", function (poses: PosePose[]) {
           let position = findPosition(poses, videoConstraints.width);
           setPosition(position ?? 0.5);
+          const info: PositionInfo = {
+            user_id: myId,
+            position_x: position ?? 0.5,
+            room_status: "Playing",
+          };
+          // create DTO
+          // globalSocket.send(JSON.stringify(""));
         });
+        globalSocket.onmessage = (msg) => {
+          console.log(msg);
+        };
       };
       f();
     }
