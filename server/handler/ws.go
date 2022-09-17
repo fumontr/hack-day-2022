@@ -11,7 +11,7 @@ import (
 var (
 	upgrader  = websocket.Upgrader{}
 	broadcast = make(chan model.Movement)
-	clients   = make(map[*websocket.Conn]bool)
+	clients   = make(map[model.Connection]bool)
 )
 
 func WebsocketSample(c echo.Context) error {
@@ -39,6 +39,7 @@ func WebsocketSample(c echo.Context) error {
 }
 
 func ConnectWebsocket(c echo.Context) error {
+	id := c.Param("id")
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
@@ -47,7 +48,7 @@ func ConnectWebsocket(c echo.Context) error {
 	}
 	defer ws.Close()
 
-	clients[ws] = true
+	clients[model.Connection{RoomID: id, Conn: ws}] = true
 
 	for {
 		var movement model.Movement
@@ -67,10 +68,10 @@ func HandleMessage() {
 		message := <-broadcast
 		// 接続中の全クライアントにメッセージを送る
 		for client := range clients {
-			err := client.WriteJSON(message)
+			err := client.Conn.WriteJSON(message)
 			if err != nil {
 				log.Printf("error: %v", err)
-				client.Close()
+				client.Conn.Close()
 				delete(clients, client)
 			}
 		}

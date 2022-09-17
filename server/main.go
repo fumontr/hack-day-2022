@@ -23,7 +23,7 @@ func main() {
 	// ws
 	{
 		e.GET("/ws", handler.WebsocketSample)
-		e.GET("/connect", handler.ConnectWebsocket)
+		e.GET("/rooms/:id/connect", handler.ConnectWebsocket)
 	}
 
 	go handler.HandleMessage()
