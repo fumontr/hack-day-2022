@@ -172,6 +172,12 @@ const ballOption = {
   collisionFilter: ballBasesWorld,
 };
 
+export type MateInfo = {
+  user_id: string;
+  position_x: number;
+  // room_status: Status;
+};
+
 export const Play: React.FC<{
   myId: string | null;
   roomId: string | null;
@@ -210,6 +216,8 @@ export const Play: React.FC<{
     width: 0,
     height: 0,
   });
+
+  const [mates, setMates] = useState<MateInfo[]>([]);
 
   useEffect(() => {
     bases.forEach((base) => {
@@ -460,6 +468,20 @@ export const Play: React.FC<{
         if (mode === "Together") {
           globalSocket.onmessage = (msg: WebSocket.IMessageEvent) => {
             const data = JSON.parse(msg.data.toString()) as PositionInfo;
+            // mates
+            const _mates: MateInfo[] = JSON.parse(JSON.stringify(mates));
+            if (_mates.map((mate) => mate.user_id).includes(data.user_id)) {
+              const index = _mates
+                .map((mate) => mate.user_id)
+                .indexOf(data.user_id);
+              _mates[index].position_x = data.position_x;
+              setMates(_mates);
+            } else {
+              mates.push({
+                position_x: data.position_x,
+                user_id: data.user_id,
+              });
+            }
           };
         }
       };
@@ -520,6 +542,45 @@ export const Play: React.FC<{
             }}
           />
         </div>
+        {mates.map((mate) => {
+          return (
+            <div
+              className="people"
+              style={{
+                position: "absolute",
+                bottom:
+                  displaySize.height * 0.1 +
+                  (document.body.clientHeight - displaySize.height) / 2 +
+                  Math.sin(currentAngle) *
+                    displaySize.width *
+                    (mate.position_x - 0.5),
+                // ポジションの正規化しようとしたけどできてない
+                left: `${
+                  Math.round(
+                    ((document.body.clientWidth - displaySize.width) / 2 +
+                      displaySize.width / 2 +
+                      (0.5 - mate.position_x) * displaySize.width) *
+                      1
+                  ) / 1
+                }px`,
+                height: "70px",
+                transform: "translateX(-50%)",
+                zIndex: "99999",
+              }}
+            >
+              <img
+                src={ManBack}
+                alt=""
+                style={{
+                  height: "100%",
+                  width: "100%",
+                  objectFit: "contain",
+                  opacity: position !== 0.5 ? "0.6" : "0.3",
+                }}
+              />
+            </div>
+          );
+        })}
       </div>
       <div style={{ zIndex: "999999", position: "absolute", top: 0, left: 0 }}>
         <button
