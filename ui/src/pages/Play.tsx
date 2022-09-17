@@ -45,7 +45,7 @@ export type Status = "Playing" | "Waiting" | "Success" | "Failure";
 
 export type PositionInfo = {
   user_id: string;
-  position_x: number;
+  position_x: string;
   room_status: Status;
 };
 
@@ -178,6 +178,18 @@ export type MateInfo = {
   // room_status: Status;
 };
 
+export type MatesInfo = {
+  [key: string]: {
+    position: string;
+  };
+};
+
+function isOpen(ws: WebSocket.w3cwebsocket) {
+  return ws.readyState === ws.OPEN;
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const Play: React.FC<{
   myId: string | null;
   roomId: string | null;
@@ -186,6 +198,9 @@ export const Play: React.FC<{
 }> = ({ myId, roomId, mode, setMode }) => {
   // console.log("======");
   // console.log(myId, roomId);
+  if (!roomId) {
+    console.warn(" no room id ! ");
+  }
   const { search } = useLocation();
   const query2 = new URLSearchParams(search);
   const roomIdFromParam = query2.get("room");
@@ -217,7 +232,7 @@ export const Play: React.FC<{
     height: 0,
   });
 
-  const [mates, setMates] = useState<MateInfo[]>([]);
+  const [mates, setMates] = useState<MatesInfo>({});
 
   useEffect(() => {
     bases.forEach((base) => {
@@ -281,7 +296,9 @@ export const Play: React.FC<{
   useEffect(() => {
     let socket;
     if (mode === "Together") {
-      socket = new WebSocket.w3cwebsocket(SOCKET_URL);
+      socket = new WebSocket.w3cwebsocket(
+        `wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/rooms/${roomId}/connect`
+      );
       globalSocket = socket;
       console.log("use effect");
       socket.onopen = () => {
@@ -456,31 +473,37 @@ export const Play: React.FC<{
         poseNet.on("pose", function (poses: PosePose[]) {
           let position = findPosition(poses, videoConstraints.width);
           setPosition(position ?? 0.5);
-          if (mode === "Together" && myId && position) {
+          if (
+            mode === "Together" &&
+            myId &&
+            position &&
+            globalSocket
+            // !isOpen(globalSocket)
+          ) {
             const info: PositionInfo = {
               user_id: myId,
-              position_x: position ?? 0.5,
+              position_x: position.toString() ?? "0.5",
               room_status: "Playing",
             };
             globalSocket.send(JSON.stringify(info));
+            // console.log("sending!");
           }
         });
         if (mode === "Together") {
+          await sleep(1000);
           globalSocket.onmessage = (msg: WebSocket.IMessageEvent) => {
             const data = JSON.parse(msg.data.toString()) as PositionInfo;
-            // mates
-            const _mates: MateInfo[] = JSON.parse(JSON.stringify(mates));
-            if (_mates.map((mate) => mate.user_id).includes(data.user_id)) {
-              const index = _mates
-                .map((mate) => mate.user_id)
-                .indexOf(data.user_id);
-              _mates[index].position_x = data.position_x;
+            console.log(data);
+            if (data.user_id !== myId) {
+              // mates
+              const _mates: MatesInfo = JSON.parse(JSON.stringify(mates));
+              console.log(mates);
+              if (_mates[data.user_id]) {
+                _mates[data.user_id].position = data.position_x;
+              } else {
+                _mates[data.user_id] = { position: data.position_x };
+              }
               setMates(_mates);
-            } else {
-              mates.push({
-                position_x: data.position_x,
-                user_id: data.user_id,
-              });
             }
           };
         }
@@ -542,7 +565,7 @@ export const Play: React.FC<{
             }}
           />
         </div>
-        {mates.map((mate) => {
+        {Object.values(mates).map((mate) => {
           return (
             <div
               className="people"
@@ -553,13 +576,13 @@ export const Play: React.FC<{
                   (document.body.clientHeight - displaySize.height) / 2 +
                   Math.sin(currentAngle) *
                     displaySize.width *
-                    (mate.position_x - 0.5),
+                    (parseFloat(mate.position) - 0.5),
                 // ポジションの正規化しようとしたけどできてない
                 left: `${
                   Math.round(
                     ((document.body.clientWidth - displaySize.width) / 2 +
                       displaySize.width / 2 +
-                      (0.5 - mate.position_x) * displaySize.width) *
+                      (0.5 - parseFloat(mate.position)) * displaySize.width) *
                       1
                   ) / 1
                 }px`,
