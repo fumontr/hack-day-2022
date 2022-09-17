@@ -155,7 +155,7 @@ const ballOption = {
   collisionFilter: ballBasesWorld,
 };
 
-export const Play = () => {
+export const Play = (myId) => {
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const webcamRef = useRef<Webcam>(null);
@@ -171,6 +171,7 @@ export const Play = () => {
   });
 
   useEffect(() => {
+    console.log(myId)
     bases.forEach((base) => {
       Body.setAngle(base, currentAngle);
     });
@@ -189,10 +190,10 @@ export const Play = () => {
   }, [position]);
   const getGoalBodies = (position: ContainerSize): Body[] => {
     const { width, height } = position;
-    const LINE_WIDTH = 6;
+    const LINE_WIDTH = height * 0.0075;
     const coords = {
-      origin: { x: 0.12, y: 0.75 },
-      // origin: { x: 0.05, y: 0.2 },
+      origin: { x: 0.14, y: 0.75 },
+      // origin: { x: 0.05, y: 0.2 }, // for debug
       size: { height: height * 0.07, width: height * 0.12 },
     };
     const options = {
@@ -234,10 +235,6 @@ export const Play = () => {
     Events.on(engine, "beforeUpdate", () => {
       if (seesaw) {
         setCurrentAngle(seesaw.angle);
-        if ((currentBall?.position.y ?? 0) >= 500000) {
-          console.log(currentBall?.position.y, displaySize.height);
-          console.log("kesu");
-        }
       }
     });
     if (boxRef.current && canvasRef.current) {
@@ -245,7 +242,7 @@ export const Play = () => {
       setDisplaySize({ width, height });
 
       const BAR_WIDTH = width * 0.6;
-      const BAR_HEIGHT = 5;
+      const BAR_HEIGHT = height * 0.009;
 
       console.log("o");
       let render = Render.create({
@@ -267,7 +264,7 @@ export const Play = () => {
       const baseObjects = baseCoordinates.map(([x, y]) => {
         return Bodies.rectangle(width * x, height * y, BAR_WIDTH, BAR_HEIGHT, {
           isStatic: true,
-          render: { fillStyle: "#060a19" },
+          render: { fillStyle: "grey" },
           collisionFilter: ballBasesWorld,
           frictionStatic: FRICTION_STATIC,
           friction: FRICTION,
@@ -284,32 +281,29 @@ export const Play = () => {
         BAR_HEIGHT,
         {
           isStatic: true,
-          render: { fillStyle: "tomato" },
+          render: { fillStyle: "lightgrey" },
           collisionFilter: seesawFLoorWorld,
         }
       );
 
-      const floorSensor = Bodies.rectangle(
-        width / 2,
-        height + 100,
-        100000,
-        BAR_HEIGHT,
-        {
-          isStatic: true,
-          isSensor: true,
-          render: { fillStyle: "transparent" },
-          collisionFilter: ballBasesWorld,
-        }
-      );
+      const floorSensor = Bodies.rectangle(width / 2, height + 100, 100000, 1, {
+        isStatic: true,
+        isSensor: true,
+        render: { fillStyle: "transparent" },
+        collisionFilter: ballBasesWorld,
+      });
 
       Events.on(engine, "collisionStart", function (event) {
         const pairs = event.pairs;
         for (var i = 0, j = pairs.length; i != j; ++i) {
           const pair = pairs[i];
-          if (
-            pair.bodyA.id === floorSensor.id ||
-            pair.bodyB.id === floorSensor.id
-          ) {
+          if (pair.bodyA.id === floorSensor.id) {
+            World.remove(globalEngine.world, pair.bodyB);
+            setCurrentBall(undefined);
+            console.error("failed!");
+          } else if (pair.bodyB.id === floorSensor.id) {
+            World.remove(globalEngine.world, pair.bodyA);
+            setCurrentBall(undefined);
             console.error("failed!");
           }
           if (pair.bodyA.id === goal[1].id || pair.bodyB.id === goal[1].id) {
@@ -322,7 +316,7 @@ export const Play = () => {
         width / 2,
         height * 0.9,
         width * 0.85,
-        10,
+        height * 0.015,
         {
           render: { fillStyle: "gold" },
           collisionFilter: seesawFLoorWorld,
@@ -335,7 +329,7 @@ export const Play = () => {
       setBases(baseObjects);
 
       // TODO: 割合でやる
-      const ball = Bodies.circle(150, 0, 20, ballOption);
+      const ball = Bodies.circle(width * 0.2, 0, height * 0.025, ballOption);
       setCurrentBall(ball);
 
       Composite.add(engine.world, [
@@ -413,7 +407,6 @@ export const Play = () => {
           left: 0,
           width: "100%",
           height: "100%",
-          border: "2px solid blue",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -447,7 +440,12 @@ export const Play = () => {
           <img
             src={ManBack}
             alt=""
-            style={{ height: "100%", width: "100%", objectFit: "contain" }}
+            style={{
+              height: "100%",
+              width: "100%",
+              objectFit: "contain",
+              opacity: position !== 0.5 ? "1" : "0.3",
+            }}
           />
         </div>
       </div>
@@ -455,7 +453,13 @@ export const Play = () => {
         <button
           className="debug-btn"
           onClick={() => {
-            const ball = Bodies.circle(150, 0, 20, ballOption);
+            const ball = Bodies.circle(
+              displaySize.width * 0.2,
+              0,
+              displaySize.height * 0.025,
+              ballOption
+            );
+
             World.add(globalEngine.world, [ball]);
             setCurrentBall(ball);
           }}
