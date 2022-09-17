@@ -10,13 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/node": "^18.7.18",
+    "@types/websocket": "^1.0.5",
     "matter-js": "^0.18.0",
     "ml5": "^0.12.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
     "react-webcam": "^7.0.1",
-    "sanitize.css": "^13.0.0"
+    "sanitize.css": "^13.0.0",
+    "socket.io-client": "^4.5.2",
+    "websocket": "^1.0.34"
   },
   "devDependencies": {
     "@types/matter-js": "^0.18.2",
