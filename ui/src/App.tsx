@@ -10,7 +10,7 @@ function App() {
   return (
     <div
       className="root"
-      style={{ position: "relative", height: "100vh", width: "100vw" }}
+      style={{ position: "relative", height: "100%", width: "100%" }}
     >
       <Routes>
         <Route path="/" element={<Start />} />

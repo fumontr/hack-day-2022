@@ -1,43 +1,17 @@
 package main
 
 import (
-	"github.com/gorilla/websocket"
+	"furiko/hack-day-2022/handler"
+	"furiko/hack-day-2022/repository"
 	"github.com/labstack/echo/v4"
-	"log"
 	"net/http"
 	"os"
 )
 
-var (
-	upgrader = websocket.Upgrader{}
-)
-
-func ws(c echo.Context) error {
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-	if err != nil {
-		log.Print("upgrade:", err)
-		return nil
-	}
-	defer ws.Close()
-	for {
-		mt, message, err := ws.ReadMessage()
-		if err != nil {
-			log.Println("connection closed from client:", err)
-			break
-		}
-		log.Printf("recv: %s", message)
-		err = ws.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("connection closed from server:", err)
-			break
-		}
-	}
-	return nil
-}
-
 func main() {
 	addr := ":8080"
 	e := echo.New()
+	repository.InitClient()
 	// テスト用
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello World!")
@@ -45,7 +19,19 @@ func main() {
 
 	// ws
 	{
-		e.GET("/ws", ws)
+		e.GET("/ws", handler.Ws)
+	}
+
+	// room
+	{
+		// 新規Room作成
+		e.POST("/rooms", handler.CreateRoom)
+		// 部屋に入る
+		e.POST("/rooms/:id/join", handler.JoinRoom)
+		// 部屋から出る
+		e.POST("/rooms/:id/exit", handler.ExitRoom)
+		// 部屋を消す
+		e.DELETE("/rooms/:id", handler.DeleteRoom)
 	}
 
 	// 環境変数からEnvを取得する
