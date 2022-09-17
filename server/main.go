@@ -1,6 +1,8 @@
 package main
 
 import (
+	"furiko/hack-day-2022/handler"
+	"furiko/hack-day-2022/repository"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"log"
@@ -38,6 +40,7 @@ func ws(c echo.Context) error {
 func main() {
 	addr := ":8080"
 	e := echo.New()
+	repository.InitClient()
 	// テスト用
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello World!")
@@ -46,6 +49,11 @@ func main() {
 	// ws
 	{
 		e.GET("/ws", ws)
+	}
+
+	// room
+	{
+		e.POST("/rooms", handler.CreateRoom)
 	}
 
 	// 環境変数からEnvを取得する
