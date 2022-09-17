@@ -24,7 +24,14 @@ func main() {
 
 	// room
 	{
+		// 新規Room作成
 		e.POST("/rooms", handler.CreateRoom)
+		// 部屋に入る
+		e.POST("/rooms/:id/join", handler.JoinRoom)
+		// 部屋から出る
+		e.POST("/rooms/:id/exit", handler.ExitRoom)
+		// 部屋を消す
+		e.DELETE("/rooms/:id", handler.DeleteRoom)
 	}
 
 	// 環境変数からEnvを取得する
