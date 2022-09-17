@@ -18,3 +18,5 @@ type Connection struct {
 	RoomID string          `json:"room_id"`
 	Conn   *websocket.Conn `json:"conn"`
 }
+
+type Connections []Connection
