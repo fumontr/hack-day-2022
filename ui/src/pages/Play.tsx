@@ -1,12 +1,28 @@
 import Matter, { Engine, Render, World, Bodies, Composite } from "matter-js";
-import React, { useEffect, useRef, useState } from "react";
+import React, { Ref, RefObject, useEffect, useRef, useState } from "react";
 
 export const Play = () => {
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef(null);
-  const [constraints, setContraints] = useState<any>();
+  const [constraints, setConstraints] = useState<any>();
   const [scene, setScene] = useState();
   const STATIC_DENSITY = 15;
+
+  const fitScreen = (boxRef: RefObject<HTMLDivElement>) => {
+    if (!boxRef?.current) return;
+    const clientWidth = boxRef.current.clientWidth;
+    const clientHeight = boxRef.current.clientHeight;
+    let width;
+    let height;
+    if (clientHeight > (clientWidth * 9) / 16) {
+      width = clientWidth;
+      height = clientWidth * (9 / 16);
+    } else {
+      height = clientHeight;
+      width = clientHeight * (16 / 9);
+    }
+    setConstraints({ width, height });
+  };
 
   const floor = Bodies.rectangle(0, 0, 0, 100, {
     isStatic: true,
@@ -72,10 +88,10 @@ export const Play = () => {
     Engine.run(engine);
     Render.run(render);
 
-    setContraints(boxRef.current.getBoundingClientRect());
+    fitScreen(boxRef);
     setScene(render);
 
-    window.addEventListener("resize", handleResize);
+    // window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -95,18 +111,6 @@ export const Play = () => {
 
       // Dynamically update floor
       const floor = scene.engine.world.bodies[0];
-
-      // Matter.Body.setPosition(floor, {
-      //   x: width / 2,
-      //   y: height + STATIC_DENSITY / 2,
-      // });
-
-      // Matter.Body.setVertices(floor, [
-      //   { x: 0, y: height },
-      //   { x: width, y: height },
-      //   { x: width, y: height + STATIC_DENSITY },
-      //   { x: 0, y: height + STATIC_DENSITY },
-      // ]);
     }
   }, [scene, constraints]);
 
@@ -116,19 +120,17 @@ export const Play = () => {
       // wall1.setAngle(2)
       console.log(wall1);
       // wall1.rotate
-      Matter.Body.rotate(wall1, 0.01)
+      Matter.Body.rotate(wall1, 0.01);
       // Matter.Body.setAngle(wall1, 0.01)
     }, 100);
 
-    //クリーンアップ
     return () => {
       clearInterval(timer);
     };
   }, []);
 
   const handleResize = () => {
-    console.log(boxRef?.current?.getBoundingClientRect());
-    setContraints(boxRef?.current?.getBoundingClientRect());
+    fitScreen(boxRef);
   };
   return (
     <div
@@ -140,21 +142,12 @@ export const Play = () => {
         width: "100%",
         height: "100%",
         border: "2px solid blue",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
       }}
     >
-      <canvas
-        id="mainCanvas"
-        ref={canvasRef}
-        // style={{
-        //   position: "absolute",
-        //   top: 0,
-        //   left: 0,
-        //   height: "100vh",
-        //   width: "100vw",
-        //   zIndex: 0, // TODO: 吟味の余地あり
-        //   border: "2px solid blue",
-        // }}
-      ></canvas>
+      <canvas id="mainCanvas" ref={canvasRef} />
     </div>
   );
 };
