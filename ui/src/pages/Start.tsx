@@ -71,7 +71,6 @@ export const Start: React.FC<{
               fontWeight="bold"
               color="#86E2FF"
               borderBottom="4px"
-              background="white"
             >
               シーソーオンライン
             </Text>
