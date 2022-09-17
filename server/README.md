@@ -18,6 +18,9 @@ brew update
 brew install httpie
 ```
 
+- 環境変数を設定
+  - Dev: development
+  
 ### サーバの起動 
 ```bash
 cd server/

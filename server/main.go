@@ -48,9 +48,12 @@ func main() {
 		e.GET("/ws", ws)
 	}
 
+	// 環境変数からEnvを取得する
+	// HotLoadで煩わしいアラートを回避する用
 	env := os.Getenv("Env")
 	if env == "development" {
 		addr = "127.0.0.1" + addr
 	}
+
 	e.Logger.Fatal(e.Start(addr))
 }
