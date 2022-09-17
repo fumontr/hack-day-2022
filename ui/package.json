@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "matter-js": "^0.18.0",
+    "ml5": "^0.12.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
+    "react-webcam": "^7.0.1",
     "sanitize.css": "^13.0.0"
   },
   "devDependencies": {
