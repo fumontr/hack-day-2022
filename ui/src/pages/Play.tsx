@@ -155,7 +155,7 @@ const ballOption = {
   collisionFilter: ballBasesWorld,
 };
 
-export const Play = (myId) => {
+export const Play = ({roomId, myId, friendId}) => {
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const webcamRef = useRef<Webcam>(null);
@@ -171,6 +171,8 @@ export const Play = (myId) => {
   });
 
   useEffect(() => {
+    console.log(roomId)
+    console.log(friendId)
     console.log(myId)
     bases.forEach((base) => {
       Body.setAngle(base, currentAngle);
