@@ -33,7 +33,9 @@ export const Start: React.FC<{
     onClose: onEnterRoomClose,
   } = useDisclosure();
 
-  const onClickPlayDescription = () => {};
+  const onClickPlayDescription = () => {
+    onHowToOpen()
+  };
 
   const onClickRoomCreate = () => {
     onEnterRoomOpen();
