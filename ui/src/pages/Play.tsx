@@ -19,7 +19,7 @@ import React, {
   useState,
 } from "react";
 import Webcam from "react-webcam";
-import { deg2rad, rad2deg } from "../lib/lib";
+import { deg2rad, getWidthHeightFromRef, rad2deg } from "../lib/lib";
 import { default as ml5, Pose, PosePose } from "ml5";
 
 const ballBasesWorld: Matter.ICollisionFilter = {
@@ -32,13 +32,13 @@ const seesawFLoorWorld: Matter.ICollisionFilter = {
   mask: 0b10,
 };
 
-export interface ContainerSize {
-  width: number;
-  height: number;
-}
+const videoConstraints = {
+  width: 720,
+  height: 360,
+  facingMode: "user",
+};
 
-function findPositon(poses: PosePose[], windowWidth: number) {
-  // console.log(poses);
+const findPosition = (poses: PosePose[], windowWidth: number) => {
   for (let i = 0; i < poses.length; i++) {
     let pose = poses[i].pose;
     for (let j = 0; j < pose.keypoints.length; j++) {
@@ -48,7 +48,7 @@ function findPositon(poses: PosePose[], windowWidth: number) {
       return position;
     }
   }
-}
+};
 
 const confirmPosition = (pose: Pose, threshold: number, width: number) => {
   // 両肩
@@ -122,11 +122,6 @@ const confirmPosition = (pose: Pose, threshold: number, width: number) => {
   }
 };
 
-// @ts-ignore
-// window.rotate = Body.rotate;
-// @ts-ignore
-window.setAngle = Body.setAngle;
-
 let seesaw: Body;
 let globalEngine: Engine;
 let poseNet;
@@ -134,14 +129,12 @@ let count = 0;
 
 export const Play = () => {
   const boxRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef(null);
-  const [containerSize, setContainerSize] = useState<ContainerSize | undefined>(
-    undefined
-  );
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const webcamRef = useRef<Webcam>(null);
+
   const [scene, setScene] = useState<Render | undefined>(undefined);
   const [currentAngle, setCurrentAngle] = useState<number>(0);
   const [bases, setBases] = useState<Body[]>([]);
-  const [rendered, setRendered] = useState(false);
   const [position, setPosition] = useState<number>(0.5);
 
   useEffect(() => {
@@ -171,32 +164,23 @@ export const Play = () => {
         setCurrentAngle(seesaw.angle);
       }
     });
-    if (boxRef.current && canvasRef.current && !rendered) {
-      const clientWidth = boxRef.current.clientWidth;
-      const clientHeight = boxRef.current.clientHeight;
-      let width = 0;
-      let height = 0;
-      if (clientHeight > (clientWidth * 3) / 4) {
-        width = clientWidth;
-        height = clientWidth * (3 / 4);
-      } else {
-        height = clientHeight;
-        width = clientHeight * (4 / 3);
-      }
+    if (boxRef.current && canvasRef.current) {
+      const { width, height } = getWidthHeightFromRef(boxRef);
+
+      const BAR_WIDTH = width * 0.5;
+      const BAR_HEIGHT = 3;
+
       console.log("o");
-      setRendered(true);
       let render = Render.create({
         element: boxRef.current,
         engine: engine,
         canvas: canvasRef.current,
         options: {
-          background: "rgba(255, 0, 0, 0.5)",
+          background: "#f9fbe7",
           wireframes: false,
         },
       });
       console.log({ width, height });
-      const BAR_WIDTH = width * 0.5;
-      const BAR_HEIGHT = 3;
       const baseCoordinates: [x: number, y: number][] = [
         [0.6, 0.1],
         [0.4, 0.2],
@@ -244,6 +228,7 @@ export const Play = () => {
         },
         collisionFilter: ballBasesWorld,
       });
+
       Composite.add(engine.world, [
         ...baseObjects,
         floor,
@@ -255,31 +240,18 @@ export const Play = () => {
           length: 0,
         }),
       ]);
-      World.add(engine.world, [ball]);
 
+      World.add(engine.world, [ball]);
       Render.run(render);
-      // create runner
-      var runner = Runner.create();
-      // run the engine
+      const runner = Runner.create();
       Runner.run(runner, engine);
-      // Runner.run(engine);
       setScene(render);
     }
   }, []);
 
   useEffect(() => {
     if (scene && boxRef.current) {
-      const clientWidth = boxRef.current.clientWidth;
-      const clientHeight = boxRef.current.clientHeight;
-      let width, height;
-      if (clientHeight > (clientWidth * 3) / 4) {
-        width = clientWidth;
-        height = clientWidth * (3 / 4);
-      } else {
-        height = clientHeight;
-        width = clientHeight * (4 / 3);
-      }
-      console.log("a");
+      const { width, height } = getWidthHeightFromRef(boxRef);
       // Dynamically update canvas and bounds
       scene.bounds.max.x = width;
       scene.bounds.max.y = height;
@@ -289,13 +261,6 @@ export const Play = () => {
       scene.canvas.height = height;
     }
   }, [scene]);
-
-  const webcamRef = useRef<Webcam>(null);
-  const videoConstraints = {
-    width: 720,
-    height: 360,
-    facingMode: "user",
-  };
 
   useEffect(() => {
     if (webcamRef.current) {
@@ -319,7 +284,7 @@ export const Play = () => {
           modelLoaded
         );
         poseNet.on("pose", function (poses: PosePose[]) {
-          let position = findPositon(poses, videoConstraints.width);
+          let position = findPosition(poses, videoConstraints.width);
           setPosition(position ?? 0.5);
         });
       };
@@ -359,7 +324,7 @@ export const Play = () => {
             World.add(globalEngine.world, [ball]);
           }}
         >
-          -
+          add ball
         </button>
         <button
           className="debug-btn"
@@ -386,7 +351,6 @@ export const Play = () => {
           seesaw-
         </button>
         <p style={{ background: "pink", border: "2px solid red" }}>
-          {/* {position} */}
           {Math.round(position * 100) / 100 ? (
             1 - Math.round(position * 100) / 100
           ) : (
