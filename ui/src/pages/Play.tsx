@@ -128,6 +128,10 @@ const confirmPosition = (pose: Pose, threshold: number, width: number) => {
   }
 };
 
+const FRICTION_STATIC = 0;
+const FRICTION = 0;
+const RESTITUTION = 0;
+
 let seesaw: Body;
 let globalEngine: Engine;
 let poseNet;
@@ -142,6 +146,7 @@ export const Play = () => {
   const [currentAngle, setCurrentAngle] = useState<number>(0);
   const [bases, setBases] = useState<Body[]>([]);
   const [position, setPosition] = useState<number>(0.5);
+  const [currentBall, setCurrentBall] = useState<Body>();
   const [displaySize, setDisplaySize] = useState<ContainerSize>({
     width: 0,
     height: 0,
@@ -164,7 +169,46 @@ export const Play = () => {
       );
     }
   }, [position]);
-
+  const getGoalBodies = (position: ContainerSize): Body[] => {
+    const { width, height } = position;
+    const LINE_WIDTH = 6;
+    const coords = {
+      // origin: { x: 0.14, y: 0.65 },
+      origin: { x: 0.05, y: 0.2 },
+      size: { height: height * 0.09, width: height * 0.14 },
+    };
+    const options = {
+      isStatic: true,
+      render: { fillStyle: "gold" },
+      collisionFilter: ballBasesWorld,
+      frictionStatic: FRICTION_STATIC,
+      friction: FRICTION,
+      restitution: RESTITUTION,
+    };
+    return [
+      Bodies.rectangle(
+        width * coords.origin.x,
+        height * coords.origin.y,
+        LINE_WIDTH,
+        coords.size.height,
+        options
+      ),
+      Bodies.rectangle(
+        width * coords.origin.x + coords.size.width / 2,
+        height * coords.origin.y + coords.size.height - coords.size.height / 2,
+        coords.size.width + LINE_WIDTH,
+        LINE_WIDTH,
+        options
+      ),
+      Bodies.rectangle(
+        width * coords.origin.x + coords.size.width,
+        height * coords.origin.y,
+        LINE_WIDTH,
+        coords.size.height,
+        options
+      ),
+    ];
+  };
   // useEffect once
   useEffect(() => {
     const engine = Engine.create({});
@@ -178,8 +222,8 @@ export const Play = () => {
       const { width, height } = getWidthHeightFromRef(boxRef);
       setDisplaySize({ width, height });
 
-      const BAR_WIDTH = width * 0.5;
-      const BAR_HEIGHT = 3;
+      const BAR_WIDTH = width * 0.6;
+      const BAR_HEIGHT = 5;
 
       console.log("o");
       let render = Render.create({
@@ -191,20 +235,25 @@ export const Play = () => {
           wireframes: false,
         },
       });
-      console.log({ width, height });
       const baseCoordinates: [x: number, y: number][] = [
-        [0.6, 0.1],
-        [0.4, 0.2],
-        [0.6, 0.4],
-        [0.4, 0.5],
+        [0.45, 0.1],
+        [0.55, 0.25],
+        [0.45, 0.4],
+        [0.55, 0.55],
       ];
+
       const baseObjects = baseCoordinates.map(([x, y]) => {
         return Bodies.rectangle(width * x, height * y, BAR_WIDTH, BAR_HEIGHT, {
           isStatic: true,
           render: { fillStyle: "#060a19" },
           collisionFilter: ballBasesWorld,
+          frictionStatic: 0.5,
+          friction: 0,
+          restitution: 0.7,
         });
       });
+
+      const goal = getGoalBodies({ width, height });
 
       const floor = Bodies.rectangle(
         width / 2,
@@ -217,6 +266,35 @@ export const Play = () => {
           collisionFilter: seesawFLoorWorld,
         }
       );
+
+      const floorSensor = Bodies.rectangle(
+        width / 2,
+        height + 100,
+        100000,
+        BAR_HEIGHT,
+        {
+          isStatic: true,
+          isSensor: true,
+          render: { fillStyle: "transparent" },
+          collisionFilter: ballBasesWorld,
+        }
+      );
+
+      Events.on(engine, "collisionStart", function (event) {
+        const pairs = event.pairs;
+        for (var i = 0, j = pairs.length; i != j; ++i) {
+          const pair = pairs[i];
+          if (
+            pair.bodyA.id === floorSensor.id ||
+            pair.bodyB.id === floorSensor.id
+          ) {
+            console.error("failed!");
+          }
+          if (pair.bodyA.id === goal[1].id || pair.bodyB.id === goal[1].id) {
+            console.warn("clear!");
+          }
+        }
+      });
 
       const seesawStick = Bodies.rectangle(
         width / 2,
@@ -232,17 +310,23 @@ export const Play = () => {
       seesaw = seesawStick;
       setBases(baseObjects);
 
+      // TODO: 割合でやる
       const ball = Bodies.circle(150, 0, 20, {
-        restitution: 0.9,
+        restitution: 0.6,
+        frictionStatic: 0.5,
+        friction: 0.7,
+        mass: 100,
         render: {
           fillStyle: "skyblue",
         },
         collisionFilter: ballBasesWorld,
       });
+      setCurrentBall(ball);
 
       Composite.add(engine.world, [
         ...baseObjects,
         floor,
+        floorSensor,
         seesawStick,
         Constraint.create({
           bodyA: seesawStick,
@@ -251,6 +335,7 @@ export const Play = () => {
           length: 0,
         }),
       ]);
+      Composite.add(engine.world, goal);
 
       World.add(engine.world, [ball]);
       Render.run(render);
@@ -337,7 +422,6 @@ export const Play = () => {
               (0.5 - position) * displaySize.width
             }px`,
             height: "80px",
-            // width: "50px",
             transform: "translateX(-50%)",
             zIndex: "99999",
           }}
@@ -361,6 +445,7 @@ export const Play = () => {
               collisionFilter: ballBasesWorld,
             });
             World.add(globalEngine.world, [ball]);
+            setCurrentBall(ball);
           }}
         >
           add ball
