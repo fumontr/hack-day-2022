@@ -26,9 +26,11 @@ export interface ContainerSize {
 }
 
 // @ts-ignore
-window.rotate = Body.rotate;
+// window.rotate = Body.rotate;
 // @ts-ignore
 window.setAngle = Body.setAngle;
+
+let seesaw: Body;
 
 export const Play = () => {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -40,20 +42,30 @@ export const Play = () => {
   const [currentAngle, setCurrentAngle] = useState<number>(0);
   const STATIC_DENSITY = 15;
   // const [engine] = useState(Engine.create({}));
-  const [bases, setBases] = useState<Matter.Body[]>([]);
+  const [bases, setBases] = useState<Body[]>([]);
   const [rendered, setRendered] = useState(false);
+  // const [seesaw, setSeesaw] = useState<Body>();
+
+  useEffect(() => {
+    bases.forEach((base) => {
+      Body.setAngle(base, currentAngle);
+    });
+  }, [currentAngle]);
 
   useEffect(() => {
     const engine = Engine.create({});
     Events.on(engine, "beforeUpdate", () => {
-      console.log("www");
+      if (seesaw) {
+        setCurrentAngle(seesaw.angle);
+      }
     });
 
     // fitScreen(boxRef);
     if (boxRef.current && canvasRef.current && !rendered) {
       const clientWidth = boxRef.current.clientWidth;
       const clientHeight = boxRef.current.clientHeight;
-      let width, height;
+      let width = 0;
+      let height = 0;
       if (clientHeight > (clientWidth * 3) / 4) {
         width = clientWidth;
         height = clientWidth * (3 / 4);
@@ -75,54 +87,28 @@ export const Play = () => {
       console.log({ width, height });
       const BAR_WIDTH = width * 0.5;
       const BAR_HEIGHT = 3;
-      const base1 = Bodies.rectangle(
-        width * 0.6,
-        height * 0.1,
-        BAR_WIDTH,
-        BAR_HEIGHT,
-        {
+      const baseCoordinates: [x: number, y: number][] = [
+        [0.6, 0.1],
+        [0.4, 0.2],
+        [0.6, 0.4],
+        [0.4, 0.5],
+      ];
+      const baseObjects = baseCoordinates.map(([x, y]) => {
+        return Bodies.rectangle(width * x, height * y, BAR_WIDTH, BAR_HEIGHT, {
           isStatic: true,
           render: { fillStyle: "#060a19" },
-        }
-      );
-      const base2 = Bodies.rectangle(
-        width * 0.4,
-        height * 0.2,
-        BAR_WIDTH,
-        BAR_HEIGHT,
-        {
-          isStatic: true,
-          render: { fillStyle: "#060a19" },
-        }
-      );
-      const base3 = Bodies.rectangle(
-        width * 0.6,
-        height * 0.4,
-        BAR_WIDTH,
-        BAR_HEIGHT,
-        {
-          isStatic: true,
-          render: { fillStyle: "#060a19" },
-        }
-      );
-      const base4 = Bodies.rectangle(
-        width * 0.4,
-        height * 0.6,
-        BAR_WIDTH,
-        BAR_HEIGHT,
-        {
-          isStatic: true,
-          render: { fillStyle: "#060a19" },
-        }
-      );
-      const nanawariLine = Bodies.rectangle(
+        });
+      });
+      const seesawGroup = Body.nextGroup(true);
+      const floor = Bodies.rectangle(
         width / 2,
-        height * 0.7,
+        height - 10,
         width,
         BAR_HEIGHT,
         {
           isStatic: true,
-          render: { fillStyle: "grey" },
+          render: { fillStyle: "tomato" },
+          collisionFilter: { group: seesawGroup },
         }
       );
 
@@ -134,11 +120,13 @@ export const Play = () => {
         10,
         {
           render: { fillStyle: "gold" },
+          collisionFilter: { group: seesawGroup },
         }
       );
       Body.setAngle(catapult, deg2rad(9));
-
-      setBases([base1, base2, base3, base4]);
+      // setSeesaw(catapult);
+      seesaw = catapult;
+      setBases(baseObjects);
 
       const ball = Bodies.circle(150, 0, 20, {
         restitution: 0.9,
@@ -147,11 +135,8 @@ export const Play = () => {
         },
       });
       Composite.add(engine.world, [
-        base1,
-        base2,
-        base3,
-        base4,
-        nanawariLine,
+        ...baseObjects,
+        floor,
         catapult,
         Constraint.create({
           bodyA: catapult,
@@ -217,32 +202,36 @@ export const Play = () => {
         <button
           className="debug-btn"
           onClick={() => {
-            // @ts-ignore
-            window.rotate(bases[0], 0.1);
-            // @ts-ignore
-            window.rotate(bases[1], 0.1);
-            // @ts-ignore
-            window.rotate(bases[2], 0.1);
-            // @ts-ignore
-            window.rotate(bases[3], 0.1);
+            bases.forEach((base) => {
+              Body.rotate(base, -0.1);
+            });
           }}
         >
-          +
+          -
         </button>
         <button
           className="debug-btn"
           onClick={() => {
-            // @ts-ignore
-            window.rotate(bases[0], -0.1);
-            // @ts-ignore
-            window.rotate(bases[1], -0.1);
-            // @ts-ignore
-            window.rotate(bases[2], -0.1);
-            // @ts-ignore
-            window.rotate(bases[3], -0.1);
+            Body.applyForce(
+              seesaw as Body,
+              Vector.create(0, 0),
+              Vector.create(0, -0.01)
+            );
           }}
         >
-          -
+          seesaw+
+        </button>
+        <button
+          className="debug-btn"
+          onClick={() => {
+            Body.applyForce(
+              seesaw as Body,
+              Vector.create(0, 0),
+              Vector.create(0, 0.01)
+            );
+          }}
+        >
+          seesaw-
         </button>
       </div>
     </>
