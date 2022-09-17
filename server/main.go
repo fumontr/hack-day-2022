@@ -22,8 +22,11 @@ func main() {
 
 	// ws
 	{
-		e.GET("/ws", handler.Ws)
+		e.GET("/ws", handler.WebsocketSample)
+		e.GET("/connect", handler.ConnectWebsocket)
 	}
+
+	go handler.HandleMessage()
 
 	// room
 	{
