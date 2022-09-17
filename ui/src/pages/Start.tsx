@@ -53,7 +53,6 @@ export const Start: React.FC<{
       <PlayDescriptionModal howToOpen={howToOpen} onHowToClose={onHowToClose} />
       <RoomCreateModal
         enterRoomOpen={enterRoomOpen}
-        onEnterRoomOpen={onEnterRoomOpen}
         onEnterRoomClose={onEnterRoomClose}
         setRoomId={setRoomId}
         setMyId={setMyId}
@@ -66,14 +65,15 @@ export const Start: React.FC<{
         backgroundSize="70%"
       >
         <Stack w="full">
-          <Flex justifyContent="right" transform="rotate(0.1)">
+          <Flex justifyContent="right">
             <Text
+              style={{ transform: "rotate(0.1)" }}
               fontSize="40px"
               fontWeight="bold"
               color="#86E2FF"
               borderBottom="4px"
             >
-              シーソーオンライン
+              シーソーオンライン！！！
             </Text>
           </Flex>
           <HStack w="full" h="full">
