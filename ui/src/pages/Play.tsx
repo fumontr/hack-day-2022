@@ -31,6 +31,7 @@ export interface ContainerSize {
 window.setAngle = Body.setAngle;
 
 let seesaw: Body;
+let globalEngine: Engine;
 
 export const Play = () => {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -54,6 +55,7 @@ export const Play = () => {
 
   useEffect(() => {
     const engine = Engine.create({});
+    globalEngine = engine;
     Events.on(engine, "beforeUpdate", () => {
       if (seesaw) {
         setCurrentAngle(seesaw.angle);
@@ -123,7 +125,7 @@ export const Play = () => {
           collisionFilter: { group: seesawGroup },
         }
       );
-      Body.setAngle(catapult, deg2rad(9));
+      Body.setAngle(catapult, deg2rad(0));
       // setSeesaw(catapult);
       seesaw = catapult;
       setBases(baseObjects);
@@ -202,9 +204,13 @@ export const Play = () => {
         <button
           className="debug-btn"
           onClick={() => {
-            bases.forEach((base) => {
-              Body.rotate(base, -0.1);
+            const ball = Bodies.circle(150, 0, 20, {
+              restitution: 0.9,
+              render: {
+                fillStyle: "skyblue",
+              },
             });
+            World.add(globalEngine.world, [ball]);
           }}
         >
           -
