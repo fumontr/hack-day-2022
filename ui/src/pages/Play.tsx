@@ -234,10 +234,8 @@ export const Play = () => {
 
       Events.on(engine, "collisionStart", function (event) {
         var pairs = event.pairs;
-        // console.log("collide");
         for (var i = 0, j = pairs.length; i != j; ++i) {
           const pair = pairs[i];
-          console.log(floorSensor.id, pair.bodyA.id, pair.bodyB.id);
           if (
             pair.bodyA.id === floorSensor.id ||
             pair.bodyB.id === floorSensor.id
