@@ -75,8 +75,6 @@ export const Start: React.FC<{
               シーソーオンライン
             </Text>
           </Flex>
-          <Success/>
-          {/*<Failed />*/}
           <HStack w="full" h="full">
             <Button
               h="400px"
