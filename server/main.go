@@ -30,6 +30,7 @@ func main() {
 
 	// room
 	{
+
 		// 新規Room作成
 		e.POST("/rooms", handler.CreateRoom)
 		// 部屋に入る

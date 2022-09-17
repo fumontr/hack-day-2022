@@ -32,7 +32,11 @@ func IssuePassword() string {
 
 func CreateRoom(c echo.Context) error {
 	ctx := context.Background()
-	id := IssueId()
+	req := new(model.CreteRoomRequest)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, "request invalid")
+	}
+	id := req.Password
 	password := IssuePassword()
 	users := []model.User{
 		{
@@ -57,30 +61,62 @@ func CreateRoom(c echo.Context) error {
 
 func JoinRoom(c echo.Context) error {
 	ctx := context.Background()
-	req := new(model.JoinRoomRequest)
-	if err := c.Bind(req); err != nil {
-		return c.JSON(http.StatusBadRequest, "request invalid")
+	id := c.Param("id")
+
+	// GetAll
+	rooms, err := service.GetRooms(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("get rooms failed"))
 	}
 
-	id := c.Param("id")
+	isCreate := true
+	for _, v := range rooms {
+		if v.Password == id {
+			isCreate = false
+			break
+		}
+	}
+
+	if isCreate {
+		users := []model.User{
+			{
+				ID: IssueId(),
+			},
+		}
+		r := model.Room{
+			ID:        id,
+			UserCount: 1,
+			Password:  id,
+			Status:    StatusWaiting,
+			Users:     users,
+		}
+
+		resp, err := service.CreateRoom(ctx, r)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+
+		return c.JSON(http.StatusOK, resp)
+	}
+
 	room, err := service.GetRoomData(ctx, id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, fmt.Sprintf("room id invalid: %v", id))
 	}
 
-	if room.Password != req.Password {
-		return c.JSON(http.StatusBadRequest, "password is wrong")
-	}
+	// Passwordのチェックはとりあえず行わない
+	//if room.Password != id {
+	//	return c.JSON(http.StatusBadRequest, "password is wrong")
+	//}
 
 	log.Printf("room: %+v", room)
 
-	newUserCount := room.UserCount + 1
-	if err = service.AddUserToRoom(ctx, room.ID, "user_count", newUserCount); err != nil {
-		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("join room %v failed", room.ID))
-	}
-	users := append(room.Users, model.User{
+	newUser := model.User{
 		ID: IssueId(),
-	})
+	}
+	newUserCount := room.UserCount + 1
+	users := append(room.Users, newUser)
+
 	nr := model.Room{
 		ID:        room.ID,
 		UserCount: newUserCount,
@@ -89,7 +125,14 @@ func JoinRoom(c echo.Context) error {
 		Users:     users,
 	}
 
-	return c.JSON(http.StatusOK, nr)
+	if err = service.AddUserToRoom(ctx, room.ID, "user_count", "users", newUserCount, users); err != nil {
+		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("join room %v failed", room.ID))
+	}
+
+	return c.JSON(http.StatusOK, model.JoinRoomResponse{
+		Room: nr,
+		User: newUser,
+	})
 }
 
 func ExitRoom(c echo.Context) error {
@@ -125,23 +168,25 @@ func ExitRoom(c echo.Context) error {
 	}
 
 	newUserCount := room.UserCount - 1
-	if err = service.AddUserToRoom(ctx, room.ID, "user_count", newUserCount); err != nil {
-		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("exit room %v failed", room.ID))
-	}
-
 	var remainUsers []model.User
 	for _, v := range users {
 		if v.ID != req.UserID {
+			log.Printf("v.ID: %v, req.UserID: %v", v.ID, req.UserID)
 			remainUsers = append(remainUsers, v)
 		}
 	}
 
+	log.Printf("users: %+v", remainUsers)
 	nr := model.Room{
 		ID:        room.ID,
 		UserCount: newUserCount,
 		Password:  room.Password,
 		Status:    room.Status,
 		Users:     remainUsers,
+	}
+
+	if err = service.ExitUserToRoom(ctx, room.ID, "user_count", "users", newUserCount, remainUsers); err != nil {
+		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("exit room %v failed", room.ID))
 	}
 
 	return c.JSON(http.StatusOK, nr)
