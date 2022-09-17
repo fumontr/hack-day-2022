@@ -44,7 +44,7 @@ export const Start: React.FC<{
   const navigate = useNavigate();
 
   const handlePlayAlone = () => {
-    setMode("Alone");
+    setMode("AlonePending");
     navigate("/play");
   };
 
@@ -106,13 +106,6 @@ export const Start: React.FC<{
             </Button>
           </Flex>
           <Flex justifyContent="right">
-            {/* <Button
-              w="80px"
-              h="80px"
-              justifyContent="center"
-              borderRadius="40px"
-              onClick={onClickPlayDescription}
-            > */}
             <a href="https://github.com/furiko/hack-day-2022" target={"_blank"}>
               <div>
                 <svg
@@ -126,7 +119,6 @@ export const Start: React.FC<{
                 </svg>
               </div>
             </a>
-            {/* </Button> */}
           </Flex>
         </Stack>
       </Flex>

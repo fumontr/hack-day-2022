@@ -7,11 +7,17 @@ import { Play } from "./pages/Play";
 
 import { ChakraProvider } from "@chakra-ui/react";
 
-export type Mode = "None" | "Alone" | "Together";
+export type Mode =
+  | "None"
+  | "AlonePending"
+  | "TogetherPending"
+  | "Alone" // while playing
+  | "Together" // while playing
+  | "Failure"
+  | "Success";
 
 function App() {
   const [myId, setMyId] = useState<string | null>(null);
-  // const [firentId, setFriendId] = useState<String|null>(null)
   const [roomId, setRoomId] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("None");
   return (

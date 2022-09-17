@@ -30,6 +30,8 @@ import { default as ml5, Pose, PosePose } from "ml5";
 import * as WebSocket from "websocket";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Mode } from "../App";
+import { useDisclosure } from "@chakra-ui/react";
+import { BeforeStartPendingModal } from "../components/BeforeStartPendingModal";
 
 const ballBasesWorld: Matter.ICollisionFilter = {
   category: 0b01,
@@ -55,8 +57,6 @@ const videoConstraints = {
   facingMode: "user",
   frameRate: { ideal: 10, max: 10 },
 };
-
-const SOCKET_URL = "wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/ws";
 
 const FRICTION_STATIC = 0;
 const FRICTION = 0;
@@ -196,15 +196,18 @@ export const Play: React.FC<{
   mode: Mode;
   setMode: (mode: Mode) => void;
 }> = ({ myId, roomId, mode, setMode }) => {
-  // console.log("======");
-  // console.log(myId, roomId);
+  const {
+    isOpen: pendingOpen,
+    onOpen: onPendingOpen,
+    onClose: onClosePending,
+  } = useDisclosure();
+
   if (!roomId) {
     console.warn(" no room id ! ");
   }
   const { search } = useLocation();
   const query2 = new URLSearchParams(search);
   const roomIdFromParam = query2.get("room");
-  const navigate = useNavigate();
   if (roomIdFromParam !== roomId) {
     // 個人モードここで実装
     // console.log("ざんねん！");
@@ -227,6 +230,7 @@ export const Play: React.FC<{
   const [bases, setBases] = useState<Body[]>([]);
   const [position, setPosition] = useState<number>(0.5);
   const [currentBall, setCurrentBall] = useState<Body>();
+  const [isParent, setParent] = useState(false);
   const [displaySize, setDisplaySize] = useState<ContainerSize>({
     width: 0,
     height: 0,
@@ -419,8 +423,8 @@ export const Play: React.FC<{
       setBases(baseObjects);
 
       // TODO: 割合でやる
-      const ball = Bodies.circle(width * 0.2, 0, height * 0.03, ballOption);
-      setCurrentBall(ball);
+      // const ball = Bodies.circle(width * 0.2, 0, height * 0.03, ballOption);
+      // setCurrentBall(ball);
 
       Composite.add(engine.world, [
         ...baseObjects,
@@ -436,7 +440,7 @@ export const Play: React.FC<{
       ]);
       Composite.add(engine.world, goal);
 
-      World.add(engine.world, [ball]);
+      // World.add(engine.world, [ball]);
       Render.run(render);
       const runner = Runner.create();
       Runner.run(runner, engine);
@@ -521,6 +525,13 @@ export const Play: React.FC<{
 
   return (
     <>
+      <BeforeStartPendingModal
+        pendingOpen={mode === "AlonePending" || mode === "TogetherPending"}
+        setMode={setMode}
+        mode={mode}
+        onClosePending={onClosePending}
+        setParent={setParent}
+      />
       <div
         ref={boxRef}
         style={{
