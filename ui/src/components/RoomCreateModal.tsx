@@ -11,6 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Mode } from "../App";
 
 type RoomCreateModalProps = {
   enterRoomOpen: boolean;
@@ -18,6 +19,7 @@ type RoomCreateModalProps = {
   onEnterRoomClose: () => void;
   setRoomId: (roomId: string) => void;
   setMyId: (myId: string) => void;
+  setMode: React.Dispatch<React.SetStateAction<Mode>>;
 };
 
 export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
@@ -26,6 +28,7 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
   onEnterRoomClose,
   setRoomId,
   setMyId,
+  setMode,
 }) => {
   let navigate = useNavigate();
   const [val, setVal] = useState("");
@@ -34,8 +37,12 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
     method: "POST",
     headers: { "Content-Type": "application/json" },
   };
-  const inputRef = useRef<HTMLInputElement>();
+
   const close = async () => {
+    if (val.length !== 3) return alert("あいことばは３文字で入力してね！");
+    // hiragana regex
+    if (!/^[\u3040-\u309F]+$/.test(val))
+      return alert("あいことばは、ひらがなだよ！");
     return fetch(
       `https://backend-dot-hack-day-2022-362804.de.r.appspot.com/rooms/${val}/join`,
       requestOptions
@@ -46,6 +53,7 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
         console.log(data);
         setMyId(data.user.id);
         setRoomId(data.password);
+        setMode("Together");
         navigate(`/play`);
       })
       .catch((err) => alert(`couldn't fetch room info. ${err}`));
@@ -57,7 +65,12 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
         <ModalHeader>ひらがな３文字の あいことば を入力</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Input size={"lg"} placeholder="あいことば" />
+          <Input
+            value={val}
+            size={"lg"}
+            placeholder="あいことば"
+            onChange={(e) => setVal(e.target.value)}
+          />
         </ModalBody>
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={close}>
