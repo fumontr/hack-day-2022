@@ -10,6 +10,7 @@ import {
   Vector,
   Events,
 } from "matter-js";
+import ManBack from "../assets/man_back.png";
 import React, {
   Ref,
   RefObject,
@@ -19,16 +20,31 @@ import React, {
   useState,
 } from "react";
 import Webcam from "react-webcam";
-import { deg2rad, rad2deg } from "../lib/lib";
+import {
+  ContainerSize,
+  deg2rad,
+  getWidthHeightFromRef,
+  rad2deg,
+} from "../lib/lib";
 import { default as ml5, Pose, PosePose } from "ml5";
 
-export interface ContainerSize {
-  width: number;
-  height: number;
-}
+const ballBasesWorld: Matter.ICollisionFilter = {
+  category: 0b01,
+  mask: 0b01,
+};
 
-function findPositon(poses: PosePose[], windowWidth: number) {
-  // console.log(poses);
+const seesawFLoorWorld: Matter.ICollisionFilter = {
+  category: 0b10,
+  mask: 0b10,
+};
+
+const videoConstraints = {
+  width: 720,
+  height: 360,
+  facingMode: "user",
+};
+
+const findPosition = (poses: PosePose[], windowWidth: number) => {
   for (let i = 0; i < poses.length; i++) {
     let pose = poses[i].pose;
     for (let j = 0; j < pose.keypoints.length; j++) {
@@ -38,7 +54,7 @@ function findPositon(poses: PosePose[], windowWidth: number) {
       return position;
     }
   }
-}
+};
 
 const confirmPosition = (pose: Pose, threshold: number, width: number) => {
   // 両肩
@@ -112,27 +128,47 @@ const confirmPosition = (pose: Pose, threshold: number, width: number) => {
   }
 };
 
-// @ts-ignore
-// window.rotate = Body.rotate;
-// @ts-ignore
-window.setAngle = Body.setAngle;
+const FRICTION_STATIC = 0;
+const FRICTION = 0;
+const RESTITUTION = 0;
+
+const BALL_MASS = 100;
+
+const SEESAW_MASS = 10000;
+const SEESAW_INERTIA = 1000000;
+
+const FORCE_FACTOR = 0.18;
 
 let seesaw: Body;
 let globalEngine: Engine;
 let poseNet;
 let count = 0;
 
+const ballOption = {
+  restitution: RESTITUTION,
+  frictionStatic: FRICTION_STATIC,
+  friction: FRICTION,
+  mass: BALL_MASS,
+  render: {
+    fillStyle: "skyblue",
+  },
+  collisionFilter: ballBasesWorld,
+};
+
 export const Play = (myId) => {
   const boxRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef(null);
-  const [containerSize, setContainerSize] = useState<ContainerSize | undefined>(
-    undefined
-  );
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const webcamRef = useRef<Webcam>(null);
+
   const [scene, setScene] = useState<Render | undefined>(undefined);
   const [currentAngle, setCurrentAngle] = useState<number>(0);
   const [bases, setBases] = useState<Body[]>([]);
-  const [rendered, setRendered] = useState(false);
   const [position, setPosition] = useState<number>(0.5);
+  const [currentBall, setCurrentBall] = useState<Body>();
+  const [displaySize, setDisplaySize] = useState<ContainerSize>({
+    width: 0,
+    height: 0,
+  });
 
   useEffect(() => {
     console.log(myId)
@@ -148,11 +184,50 @@ export const Play = (myId) => {
       Body.applyForce(
         seesaw as Body,
         Vector.create(0, 0),
-        Vector.create(0, (position - 0.5) / 10)
+        Vector.create(0, (position - 0.5) * FORCE_FACTOR)
       );
     }
   }, [position]);
-
+  const getGoalBodies = (position: ContainerSize): Body[] => {
+    const { width, height } = position;
+    const LINE_WIDTH = height * 0.0075;
+    const coords = {
+      origin: { x: 0.14, y: 0.75 },
+      // origin: { x: 0.05, y: 0.2 }, // for debug
+      size: { height: height * 0.07, width: height * 0.12 },
+    };
+    const options = {
+      isStatic: true,
+      render: { fillStyle: "orange" },
+      collisionFilter: ballBasesWorld,
+      frictionStatic: FRICTION_STATIC,
+      friction: FRICTION,
+      restitution: RESTITUTION,
+    };
+    return [
+      Bodies.rectangle(
+        width * coords.origin.x,
+        height * coords.origin.y,
+        LINE_WIDTH,
+        coords.size.height,
+        options
+      ),
+      Bodies.rectangle(
+        width * coords.origin.x + coords.size.width / 2,
+        height * coords.origin.y + coords.size.height - coords.size.height / 2,
+        coords.size.width + LINE_WIDTH,
+        LINE_WIDTH,
+        options
+      ),
+      Bodies.rectangle(
+        width * coords.origin.x + coords.size.width,
+        height * coords.origin.y,
+        LINE_WIDTH,
+        coords.size.height,
+        options
+      ),
+    ];
+  };
   // useEffect once
   useEffect(() => {
     const engine = Engine.create({});
@@ -162,45 +237,43 @@ export const Play = (myId) => {
         setCurrentAngle(seesaw.angle);
       }
     });
-    if (boxRef.current && canvasRef.current && !rendered) {
-      const clientWidth = boxRef.current.clientWidth;
-      const clientHeight = boxRef.current.clientHeight;
-      let width = 0;
-      let height = 0;
-      if (clientHeight > (clientWidth * 3) / 4) {
-        width = clientWidth;
-        height = clientWidth * (3 / 4);
-      } else {
-        height = clientHeight;
-        width = clientHeight * (4 / 3);
-      }
+    if (boxRef.current && canvasRef.current) {
+      const { width, height } = getWidthHeightFromRef(boxRef);
+      setDisplaySize({ width, height });
+
+      const BAR_WIDTH = width * 0.6;
+      const BAR_HEIGHT = height * 0.009;
+
       console.log("o");
-      setRendered(true);
       let render = Render.create({
         element: boxRef.current,
         engine: engine,
         canvas: canvasRef.current,
         options: {
-          background: "rgba(255, 0, 0, 0.5)",
+          background: "#f9fbe7",
           wireframes: false,
         },
       });
-      console.log({ width, height });
-      const BAR_WIDTH = width * 0.5;
-      const BAR_HEIGHT = 3;
       const baseCoordinates: [x: number, y: number][] = [
-        [0.6, 0.1],
-        [0.4, 0.2],
-        [0.6, 0.4],
-        [0.4, 0.5],
+        [0.45, 0.15],
+        [0.55, 0.3],
+        [0.45, 0.45],
+        [0.55, 0.66],
       ];
+
       const baseObjects = baseCoordinates.map(([x, y]) => {
         return Bodies.rectangle(width * x, height * y, BAR_WIDTH, BAR_HEIGHT, {
           isStatic: true,
-          render: { fillStyle: "#060a19" },
+          render: { fillStyle: "grey" },
+          collisionFilter: ballBasesWorld,
+          frictionStatic: FRICTION_STATIC,
+          friction: FRICTION,
+          restitution: RESTITUTION,
         });
       });
-      const seesawGroup = Body.nextGroup(true);
+
+      const goal = getGoalBodies({ width, height });
+
       const floor = Bodies.rectangle(
         width / 2,
         height - 10,
@@ -208,69 +281,82 @@ export const Play = (myId) => {
         BAR_HEIGHT,
         {
           isStatic: true,
-          render: { fillStyle: "tomato" },
-          collisionFilter: { group: seesawGroup },
+          render: { fillStyle: "lightgrey" },
+          collisionFilter: seesawFLoorWorld,
         }
       );
 
-      // var catapult = Bodies.rectangle(400, 520, 320, 20, { collisionFilter: { group: group } });
-      const catapult = Bodies.rectangle(
+      const floorSensor = Bodies.rectangle(width / 2, height + 100, 100000, 1, {
+        isStatic: true,
+        isSensor: true,
+        render: { fillStyle: "transparent" },
+        collisionFilter: ballBasesWorld,
+      });
+
+      Events.on(engine, "collisionStart", function (event) {
+        const pairs = event.pairs;
+        for (var i = 0, j = pairs.length; i != j; ++i) {
+          const pair = pairs[i];
+          if (pair.bodyA.id === floorSensor.id) {
+            World.remove(globalEngine.world, pair.bodyB);
+            setCurrentBall(undefined);
+            console.error("failed!");
+          } else if (pair.bodyB.id === floorSensor.id) {
+            World.remove(globalEngine.world, pair.bodyA);
+            setCurrentBall(undefined);
+            console.error("failed!");
+          }
+          if (pair.bodyA.id === goal[1].id || pair.bodyB.id === goal[1].id) {
+            console.warn("clear!");
+          }
+        }
+      });
+
+      const seesawStick = Bodies.rectangle(
         width / 2,
         height * 0.9,
         width * 0.85,
-        10,
+        height * 0.015,
         {
           render: { fillStyle: "gold" },
-          collisionFilter: { group: seesawGroup },
+          collisionFilter: seesawFLoorWorld,
+          mass: SEESAW_MASS,
+          inertia: SEESAW_INERTIA,
         }
       );
-      Body.setAngle(catapult, deg2rad(0));
-      // setSeesaw(catapult);
-      seesaw = catapult;
+      Body.setAngle(seesawStick, deg2rad(0));
+      seesaw = seesawStick;
       setBases(baseObjects);
 
-      const ball = Bodies.circle(150, 0, 20, {
-        restitution: 0.9,
-        render: {
-          fillStyle: "skyblue",
-        },
-      });
+      // TODO: 割合でやる
+      const ball = Bodies.circle(width * 0.2, 0, height * 0.025, ballOption);
+      setCurrentBall(ball);
+
       Composite.add(engine.world, [
         ...baseObjects,
         floor,
-        catapult,
+        floorSensor,
+        seesawStick,
         Constraint.create({
-          bodyA: catapult,
-          pointB: Vector.clone(catapult.position),
+          bodyA: seesawStick,
+          pointB: Vector.clone(seesawStick.position),
           stiffness: 1,
           length: 0,
         }),
       ]);
-      World.add(engine.world, [ball]);
+      Composite.add(engine.world, goal);
 
+      World.add(engine.world, [ball]);
       Render.run(render);
-      // create runner
-      var runner = Runner.create();
-      // run the engine
+      const runner = Runner.create();
       Runner.run(runner, engine);
-      // Runner.run(engine);
       setScene(render);
     }
   }, []);
 
   useEffect(() => {
     if (scene && boxRef.current) {
-      const clientWidth = boxRef.current.clientWidth;
-      const clientHeight = boxRef.current.clientHeight;
-      let width, height;
-      if (clientHeight > (clientWidth * 3) / 4) {
-        width = clientWidth;
-        height = clientWidth * (3 / 4);
-      } else {
-        height = clientHeight;
-        width = clientHeight * (4 / 3);
-      }
-      console.log("a");
+      const { width, height } = displaySize;
       // Dynamically update canvas and bounds
       scene.bounds.max.x = width;
       scene.bounds.max.y = height;
@@ -280,13 +366,6 @@ export const Play = (myId) => {
       scene.canvas.height = height;
     }
   }, [scene]);
-
-  const webcamRef = useRef<Webcam>(null);
-  const videoConstraints = {
-    width: 720,
-    height: 360,
-    facingMode: "user",
-  };
 
   useEffect(() => {
     if (webcamRef.current) {
@@ -310,7 +389,7 @@ export const Play = (myId) => {
           modelLoaded
         );
         poseNet.on("pose", function (poses: PosePose[]) {
-          let position = findPositon(poses, videoConstraints.width);
+          let position = findPosition(poses, videoConstraints.width);
           setPosition(position ?? 0.5);
         });
       };
@@ -328,61 +407,65 @@ export const Play = (myId) => {
           left: 0,
           width: "100%",
           height: "100%",
-          border: "2px solid blue",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
         }}
       >
-        <canvas id="mainCanvas" ref={canvasRef} style={{ zIndex: 10 }} />
+        <canvas
+          id="mainCanvas"
+          ref={canvasRef}
+          style={{ zIndex: 10, position: "relative" }}
+        />
+        <div
+          className="me"
+          style={{
+            position: "absolute",
+            bottom:
+              displaySize.height * 0.1 +
+              Math.sin(currentAngle) * displaySize.width * (position - 0.5),
+            left: `${
+              Math.round(
+                ((document.body.clientWidth - displaySize.width) / 2 +
+                  displaySize.width / 2 +
+                  (0.5 - position) * displaySize.width) *
+                  1
+              ) / 1
+            }px`,
+            height: "80px",
+            transform: "translateX(-50%)",
+            zIndex: "99999",
+          }}
+        >
+          <img
+            src={ManBack}
+            alt=""
+            style={{
+              height: "100%",
+              width: "100%",
+              objectFit: "contain",
+              opacity: position !== 0.5 ? "1" : "0.3",
+            }}
+          />
+        </div>
       </div>
-      <div style={{ zIndex: "99999", position: "absolute", top: 0, left: 0 }}>
+      <div style={{ zIndex: "999999", position: "absolute", top: 0, left: 0 }}>
         <button
           className="debug-btn"
           onClick={() => {
-            const ball = Bodies.circle(150, 0, 20, {
-              restitution: 0.9,
-              render: {
-                fillStyle: "skyblue",
-              },
-            });
+            const ball = Bodies.circle(
+              displaySize.width * 0.2,
+              0,
+              displaySize.height * 0.025,
+              ballOption
+            );
+
             World.add(globalEngine.world, [ball]);
+            setCurrentBall(ball);
           }}
         >
-          -
+          add ball
         </button>
-        <button
-          className="debug-btn"
-          onClick={() => {
-            Body.applyForce(
-              seesaw as Body,
-              Vector.create(0, 0),
-              Vector.create(0, -0.01)
-            );
-          }}
-        >
-          seesaw+
-        </button>
-        <button
-          className="debug-btn"
-          onClick={() => {
-            Body.applyForce(
-              seesaw as Body,
-              Vector.create(0, 0),
-              Vector.create(0, 0.01)
-            );
-          }}
-        >
-          seesaw-
-        </button>
-        <p style={{ background: "pink", border: "2px solid red" }}>
-          {/* {position} */}
-          {Math.round(position * 100) / 100 ? (
-            1 - Math.round(position * 100) / 100
-          ) : (
-            <span style={{ fontSize: "36px" }}>out of range!!</span>
-          )}
-        </p>
       </div>
       <div
         className="cameraContainer"
