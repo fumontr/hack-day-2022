@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"log"
+	"net/http"
 )
 
 var (
@@ -14,6 +15,7 @@ var (
 )
 
 func WebsocketSample(c echo.Context) error {
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		log.Print("upgrade:", err)
@@ -37,6 +39,7 @@ func WebsocketSample(c echo.Context) error {
 }
 
 func ConnectWebsocket(c echo.Context) error {
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		log.Print("upgrade:", err)
