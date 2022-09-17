@@ -14,6 +14,11 @@ export const Play = () => {
       fillStyle: "blue",
     },
   });
+  const wall1 = Bodies.rectangle(200, 50, 400, 20, {
+    isStatic: true,
+    angle: Math.PI * 0.06,
+    render: { fillStyle: "#060a19" },
+  });
 
   useEffect(() => {
     let engine = Engine.create({});
@@ -35,7 +40,7 @@ export const Play = () => {
     //   },
     // });
 
-    const ball = Bodies.circle(150, 0, 100, {
+    const ball = Bodies.circle(150, 0, 20, {
       restitution: 0.9,
       render: {
         fillStyle: "skyblue",
@@ -49,11 +54,7 @@ export const Play = () => {
     //   Bodies.rectangle(0, 300, 50, 600, { isStatic: true }),
     // ]);
     Composite.add(engine.world, [
-      Bodies.rectangle(200, 150, 400, 20, {
-        isStatic: true,
-        angle: Math.PI * 0.06,
-        render: { fillStyle: "#060a19" },
-      }),
+      wall1,
       Bodies.rectangle(300, 560, 600, 20, {
         isStatic: true,
         angle: Math.PI * 0.04,
@@ -95,32 +96,38 @@ export const Play = () => {
       // Dynamically update floor
       const floor = scene.engine.world.bodies[0];
 
-      Matter.Body.setPosition(floor, {
-        x: width / 2,
-        y: height + STATIC_DENSITY / 2,
-      });
+      // Matter.Body.setPosition(floor, {
+      //   x: width / 2,
+      //   y: height + STATIC_DENSITY / 2,
+      // });
 
-      Matter.Body.setVertices(floor, [
-        { x: 0, y: height },
-        { x: width, y: height },
-        { x: width, y: height + STATIC_DENSITY },
-        { x: 0, y: height + STATIC_DENSITY },
-      ]);
+      // Matter.Body.setVertices(floor, [
+      //   { x: 0, y: height },
+      //   { x: width, y: height },
+      //   { x: width, y: height + STATIC_DENSITY },
+      //   { x: 0, y: height + STATIC_DENSITY },
+      // ]);
     }
   }, [scene, constraints]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = setInterval(() => {
       console.log("1");
-    }, 2 * 1000);
+      // wall1.setAngle(2)
+      console.log(wall1);
+      // wall1.rotate
+      Matter.Body.rotate(wall1, 0.01)
+      // Matter.Body.setAngle(wall1, 0.01)
+    }, 100);
 
     //クリーンアップ
     return () => {
-      clearTimeout(timer);
+      clearInterval(timer);
     };
   }, []);
 
   const handleResize = () => {
+    console.log(boxRef?.current?.getBoundingClientRect());
     setContraints(boxRef?.current?.getBoundingClientRect());
   };
   return (
