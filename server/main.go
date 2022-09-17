@@ -3,39 +3,10 @@ package main
 import (
 	"furiko/hack-day-2022/handler"
 	"furiko/hack-day-2022/repository"
-	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
-	"log"
 	"net/http"
 	"os"
 )
-
-var (
-	upgrader = websocket.Upgrader{}
-)
-
-func ws(c echo.Context) error {
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-	if err != nil {
-		log.Print("upgrade:", err)
-		return nil
-	}
-	defer ws.Close()
-	for {
-		mt, message, err := ws.ReadMessage()
-		if err != nil {
-			log.Println("connection closed from client:", err)
-			break
-		}
-		log.Printf("recv: %s", message)
-		err = ws.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("connection closed from server:", err)
-			break
-		}
-	}
-	return nil
-}
 
 func main() {
 	addr := ":8080"
@@ -48,7 +19,7 @@ func main() {
 
 	// ws
 	{
-		e.GET("/ws", ws)
+		e.GET("/ws", handler.Ws)
 	}
 
 	// room
