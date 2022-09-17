@@ -4,6 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import { NotFound } from "./pages/NotFound";
 import { Start } from "./pages/Start";
 import { Play } from "./pages/Play";
+import { VideoSample } from "./pages/VideoSample";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<Start />} />
         <Route path="/play" element={<Play />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/video" element={<VideoSample />} />
       </Routes>
     </div>
   );
