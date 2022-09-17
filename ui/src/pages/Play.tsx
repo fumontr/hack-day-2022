@@ -18,12 +18,99 @@ import React, {
   useRef,
   useState,
 } from "react";
+import Webcam from "react-webcam";
 import { deg2rad, rad2deg } from "../lib/lib";
+import { default as ml5, Pose, PosePose } from "ml5";
 
 export interface ContainerSize {
   width: number;
   height: number;
 }
+
+function findPositon(poses: PosePose[], windowWidth: number) {
+  // console.log(poses);
+  for (let i = 0; i < poses.length; i++) {
+    let pose = poses[i].pose;
+    for (let j = 0; j < pose.keypoints.length; j++) {
+      const threshold = 0.4;
+      let position = confirmPosition(pose, threshold, windowWidth);
+      // 多分このforを全部回せば複数人対応できる
+      return position;
+    }
+  }
+}
+
+const confirmPosition = (pose: Pose, threshold: number, width: number) => {
+  // 両肩
+  if (
+    pose.leftShoulder.confidence > threshold &&
+    pose.rightShoulder.confidence > threshold
+  ) {
+    let center = (pose.leftShoulder.x + pose.rightShoulder.x) / 2;
+    let xPersentage = center / width;
+    return xPersentage;
+  }
+  // 両腰
+  if (
+    pose.leftHip.confidence > threshold &&
+    pose.rightHip.confidence > threshold
+  ) {
+    let center = (pose.leftHip.x + pose.rightHip.x) / 2;
+    let xPersentage = center / width;
+    return xPersentage;
+  }
+  // 両膝
+  if (
+    pose.leftKnee.confidence > threshold &&
+    pose.rightKnee.confidence > threshold
+  ) {
+    let center = (pose.leftKnee.x + pose.rightKnee.x) / 2;
+    let xPersentage = center / width;
+    return xPersentage;
+  }
+  // 片肩
+  if (
+    pose.leftShoulder.confidence > threshold &&
+    pose.rightShoulder.confidence > threshold
+  ) {
+    let center = null;
+    if (pose.leftShoulder.confidence > pose.rightShoulder.confidence) {
+      center = pose.leftShoulder.x;
+    } else {
+      center = pose.rightShoulder.x;
+    }
+    let xPersentage = center / width;
+    return xPersentage;
+  }
+  // 片腰
+  if (
+    pose.leftHip.confidence > threshold &&
+    pose.rightHip.confidence > threshold
+  ) {
+    let center = null;
+    if (pose.leftHip.confidence > pose.rightHip.confidence) {
+      center = pose.leftHip.x;
+    } else {
+      center = pose.rightHip.x;
+    }
+    let xPersentage = center / width;
+    return xPersentage;
+  }
+  // 片膝
+  if (
+    pose.leftKnee.confidence > threshold &&
+    pose.rightKnee.confidence > threshold
+  ) {
+    let center = null;
+    if (pose.leftKnee.confidence > pose.rightKnee.confidence) {
+      center = pose.leftKnee.x;
+    } else {
+      center = pose.rightKnee.x;
+    }
+    let xPersentage = center / width;
+    return xPersentage;
+  }
+};
 
 // @ts-ignore
 // window.rotate = Body.rotate;
@@ -32,6 +119,8 @@ window.setAngle = Body.setAngle;
 
 let seesaw: Body;
 let globalEngine: Engine;
+let poseNet;
+let count = 0;
 
 export const Play = () => {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -41,11 +130,9 @@ export const Play = () => {
   );
   const [scene, setScene] = useState<Render | undefined>(undefined);
   const [currentAngle, setCurrentAngle] = useState<number>(0);
-  const STATIC_DENSITY = 15;
-  // const [engine] = useState(Engine.create({}));
   const [bases, setBases] = useState<Body[]>([]);
   const [rendered, setRendered] = useState(false);
-  // const [seesaw, setSeesaw] = useState<Body>();
+  const [position, setPosition] = useState<number>(0.5);
 
   useEffect(() => {
     bases.forEach((base) => {
@@ -54,6 +141,19 @@ export const Play = () => {
   }, [currentAngle]);
 
   useEffect(() => {
+    count++;
+    if (position && seesaw && count == 6) {
+      count = 0;
+      Body.applyForce(
+        seesaw as Body,
+        Vector.create(0, 0),
+        Vector.create(0, (position - 0.5) / 10)
+      );
+    }
+  }, [position]);
+
+  // useEffect once
+  useEffect(() => {
     const engine = Engine.create({});
     globalEngine = engine;
     Events.on(engine, "beforeUpdate", () => {
@@ -61,8 +161,6 @@ export const Play = () => {
         setCurrentAngle(seesaw.angle);
       }
     });
-
-    // fitScreen(boxRef);
     if (boxRef.current && canvasRef.current && !rendered) {
       const clientWidth = boxRef.current.clientWidth;
       const clientHeight = boxRef.current.clientHeight;
@@ -182,6 +280,43 @@ export const Play = () => {
     }
   }, [scene]);
 
+  const webcamRef = useRef<Webcam>(null);
+  const videoConstraints = {
+    width: 720,
+    height: 360,
+    facingMode: "user",
+  };
+
+  useEffect(() => {
+    if (webcamRef.current) {
+      const modelLoaded = () => {
+        if (!webcamRef.current?.video) return;
+        const { width, height } = videoConstraints;
+        webcamRef.current.video.width = width;
+        webcamRef.current.video.height = height;
+        const detectionInterval = setInterval(() => {
+          return () => {
+            if (detectionInterval) {
+              clearInterval(detectionInterval);
+            }
+          };
+        }, 200);
+      };
+      const f = async () => {
+        poseNet = await ml5.poseNet(
+          webcamRef.current?.video,
+          "single",
+          modelLoaded
+        );
+        poseNet.on("pose", function (poses: PosePose[]) {
+          let position = findPositon(poses, videoConstraints.width);
+          setPosition(position ?? 0.5);
+        });
+      };
+      f();
+    }
+  }, [webcamRef]);
+
   return (
     <>
       <div
@@ -239,6 +374,33 @@ export const Play = () => {
         >
           seesaw-
         </button>
+        <p style={{ background: "pink", border: "2px solid red" }}>
+          {/* {position} */}
+          {Math.round(position * 100) / 100 ? (
+            1 - Math.round(position * 100) / 100
+          ) : (
+            <span style={{ fontSize: "36px" }}>out of range!!</span>
+          )}
+        </p>
+      </div>
+      <div
+        className="cameraContainer"
+        style={{
+          zIndex: "99999",
+          position: "absolute",
+          right: 0,
+        }}
+      >
+        <Webcam
+          style={{ transform: "scale(0.2)" }}
+          audio={false}
+          width={200}
+          height={100}
+          ref={webcamRef}
+          screenshotFormat="image/jpeg"
+          videoConstraints={videoConstraints}
+          mirrored
+        />
       </div>
     </>
   );
