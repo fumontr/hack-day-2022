@@ -78,10 +78,11 @@ func JoinRoom(c echo.Context) error {
 	}
 
 	if isCreate {
+		newUser := model.User{
+			ID: IssueId(),
+		}
 		users := []model.User{
-			{
-				ID: IssueId(),
-			},
+			newUser,
 		}
 		r := model.Room{
 			ID:        id,
@@ -96,7 +97,12 @@ func JoinRoom(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
 
-		return c.JSON(http.StatusOK, resp)
+		nr := model.JoinRoomResponse{
+			Room: *resp,
+			User: newUser,
+		}
+
+		return c.JSON(http.StatusOK, nr)
 	}
 
 	room, err := service.GetRoomData(ctx, id)
