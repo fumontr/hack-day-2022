@@ -51,6 +51,22 @@ func UpdateUserCountInRoom(ctx context.Context, id, path string, num int) error 
 	return nil
 }
 
+func UpdateUsersInRoom(ctx context.Context, id, path string, users []model.User) error {
+	_, err := client.Collection("rooms").Doc(id).Update(ctx, []firestore.Update{
+		{
+			Path:  path,
+			Value: users,
+		},
+	})
+
+	if err != nil {
+		log.Errorf(ctx, "update room data failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func DeleteRoom(ctx context.Context, id string) error {
 	_, err := client.Collection("rooms").Doc(id).Delete(ctx)
 	if err != nil {

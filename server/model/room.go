@@ -8,10 +8,15 @@ type Room struct {
 	Users     []User `json:"users" firestore:"users,omitempty"`
 }
 
-type JoinRoomRequest struct {
+type CreteRoomRequest struct {
 	Password string `json:"password"`
 }
 
 type ExitRoomRequest struct {
 	UserID string `json:"user_id"`
+}
+
+type JoinRoomResponse struct {
+	Room
+	User User `json:"user"`
 }
