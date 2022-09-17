@@ -302,7 +302,6 @@ export const Play: React.FC<{
       ),
     ];
   };
-  console.log(myId);
   // useEffect once
   useEffect(() => {
     let socket;
@@ -311,7 +310,6 @@ export const Play: React.FC<{
         `wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/rooms/${roomId}/connect`
       );
       globalSocket = socket;
-      console.log("use effect");
       socket.onopen = () => {
         console.log("connected");
       };
@@ -503,11 +501,10 @@ export const Play: React.FC<{
           await sleep(1000);
           globalSocket.onmessage = (msg: WebSocket.IMessageEvent) => {
             const data = JSON.parse(msg.data.toString()) as PositionInfo;
-            console.log(data);
+            // console.log(data);
             if (data.user_id !== myId) {
               // mates
               const _mates: MatesInfo = JSON.parse(JSON.stringify(mates));
-              console.log(mates);
               if (_mates[data.user_id]) {
                 _mates[data.user_id].position = data.position_x;
               } else {
