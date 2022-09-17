@@ -142,6 +142,7 @@ export const Play = () => {
   const [currentAngle, setCurrentAngle] = useState<number>(0);
   const [bases, setBases] = useState<Body[]>([]);
   const [position, setPosition] = useState<number>(0.5);
+  const [currentBall, setCurrentBall] = useState<Body>();
   const [displaySize, setDisplaySize] = useState<ContainerSize>({
     width: 0,
     height: 0,
@@ -218,6 +219,34 @@ export const Play = () => {
         }
       );
 
+      const floorSensor = Bodies.rectangle(
+        width / 2,
+        height + 100,
+        100000,
+        BAR_HEIGHT,
+        {
+          isStatic: true,
+          isSensor: true,
+          render: { fillStyle: "transparent" },
+          collisionFilter: ballBasesWorld,
+        }
+      );
+
+      Events.on(engine, "collisionStart", function (event) {
+        var pairs = event.pairs;
+        // console.log("collide");
+        for (var i = 0, j = pairs.length; i != j; ++i) {
+          const pair = pairs[i];
+          console.log(floorSensor.id, pair.bodyA.id, pair.bodyB.id);
+          if (
+            pair.bodyA.id === floorSensor.id ||
+            pair.bodyB.id === floorSensor.id
+          ) {
+            alert("failed!");
+          }
+        }
+      });
+
       const seesawStick = Bodies.rectangle(
         width / 2,
         height * 0.9,
@@ -232,17 +261,21 @@ export const Play = () => {
       seesaw = seesawStick;
       setBases(baseObjects);
 
+      // TODO: 割合でやる
       const ball = Bodies.circle(150, 0, 20, {
         restitution: 0.9,
         render: {
           fillStyle: "skyblue",
         },
         collisionFilter: ballBasesWorld,
+        // friction: 1,
       });
+      setCurrentBall(ball);
 
       Composite.add(engine.world, [
         ...baseObjects,
         floor,
+        floorSensor,
         seesawStick,
         Constraint.create({
           bodyA: seesawStick,
@@ -337,7 +370,6 @@ export const Play = () => {
               (0.5 - position) * displaySize.width
             }px`,
             height: "80px",
-            // width: "50px",
             transform: "translateX(-50%)",
             zIndex: "99999",
           }}
@@ -361,6 +393,7 @@ export const Play = () => {
               collisionFilter: ballBasesWorld,
             });
             World.add(globalEngine.world, [ball]);
+            setCurrentBall(ball);
           }}
         >
           add ball
