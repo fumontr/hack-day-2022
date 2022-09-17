@@ -51,7 +51,7 @@ const videoConstraints = {
   width: 720,
   height: 360,
   facingMode: "user",
-  frameRate: { ideal: 5, max: 5 },
+  frameRate: { ideal: 10, max: 10 },
 };
 
 const SOCKET_URL = "wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/ws";
@@ -190,16 +190,16 @@ export const Play: React.FC<{
   });
 
   useEffect(() => {
-    console.log(roomId);
-    console.log(friendId);
-    console.log(myId);
+    // console.log(roomId);
+    // console.log(friendId);
+    // console.log(myId);
     bases.forEach((base) => {
       Body.setAngle(base, currentAngle);
     });
   }, [currentAngle]);
 
   useEffect(() => {
-    console.log(myId);
+    // console.log(myId);
     count++;
     if (position && seesaw && count == 6) {
       count = 0;
@@ -365,7 +365,7 @@ export const Play: React.FC<{
       setBases(baseObjects);
 
       // TODO: 割合でやる
-      const ball = Bodies.circle(width * 0.2, 0, height * 0.025, ballOption);
+      const ball = Bodies.circle(width * 0.2, 0, height * 0.03, ballOption);
       setCurrentBall(ball);
 
       Composite.add(engine.world, [
@@ -469,6 +469,7 @@ export const Play: React.FC<{
             position: "absolute",
             bottom:
               displaySize.height * 0.1 +
+              (document.body.clientHeight - displaySize.height) / 2 +
               Math.sin(currentAngle) * displaySize.width * (position - 0.5),
             // ポジションの正規化しようとしたけどできてない
             left: `${
@@ -503,7 +504,7 @@ export const Play: React.FC<{
             const ball = Bodies.circle(
               displaySize.width * 0.2,
               0,
-              displaySize.height * 0.025,
+              displaySize.height * 0.03,
               ballOption
             );
 
