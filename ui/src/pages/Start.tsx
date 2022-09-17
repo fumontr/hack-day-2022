@@ -13,11 +13,14 @@ import {
 } from "@chakra-ui/react";
 import { Flex, HStack, Text, Stack } from "@chakra-ui/react";
 import BackgroundImage from "../assets/background.png";
+import { Mode } from "../App";
+import { useNavigate } from "react-router-dom";
 
 export const Start: React.FC<{
   setMyId: React.Dispatch<React.SetStateAction<string | null>>;
   setRoomId: React.Dispatch<React.SetStateAction<string | null>>;
-}> = ({ setMyId, setRoomId }) => {
+  setMode: React.Dispatch<React.SetStateAction<Mode>>;
+}> = ({ setMyId, setRoomId, setMode }) => {
   const {
     isOpen: howToOpen,
     onOpen: onHowToOpen,
@@ -35,6 +38,13 @@ export const Start: React.FC<{
     onEnterRoomOpen();
   };
 
+  const navigate = useNavigate();
+
+  const handlePlayAlone = () => {
+    setMode("Alone");
+    navigate("/play");
+  };
+
   return (
     <>
       <Modal isOpen={howToOpen} onClose={onHowToClose}>
@@ -47,7 +57,6 @@ export const Start: React.FC<{
             <Button colorScheme="blue" mr={3} onClick={onHowToClose}>
               Close
             </Button>
-            {/* <Button variant="ghost">Secondary Action</Button> */}
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -57,6 +66,7 @@ export const Start: React.FC<{
         onEnterRoomClose={onEnterRoomClose}
         setRoomId={setRoomId}
         setMyId={setMyId}
+        setMode={setMode}
       />
       <Flex
         className="flex p-20 h-screen bg-white"
@@ -80,6 +90,7 @@ export const Start: React.FC<{
               h="400px"
               className="bg-gray-300 hover:bg-blue-700 text-black-900 font-bold py-2 px-4 rounded w-full"
               opacity="0.9"
+              onClick={handlePlayAlone}
             >
               <Text fontSize="4xl">ひとりであそぶ</Text>
             </Button>

@@ -11,6 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Mode } from "../App";
 
 type RoomCreateModalProps = {
   enterRoomOpen: boolean;
@@ -18,6 +19,7 @@ type RoomCreateModalProps = {
   onEnterRoomClose: () => void;
   setRoomId: (roomId: string) => void;
   setMyId: (myId: string) => void;
+  setMode: React.Dispatch<React.SetStateAction<Mode>>;
 };
 
 export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
@@ -26,6 +28,7 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
   onEnterRoomClose,
   setRoomId,
   setMyId,
+  setMode,
 }) => {
   let navigate = useNavigate();
   const [val, setVal] = useState("");
@@ -50,6 +53,7 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
         console.log(data);
         setMyId(data.user.id);
         setRoomId(data.password);
+        setMode("Together");
         navigate(`/play`);
       })
       .catch((err) => alert(`couldn't fetch room info. ${err}`));

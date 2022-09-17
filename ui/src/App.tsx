@@ -8,10 +8,13 @@ import { VideoSample } from "./pages/VideoSample";
 
 import { ChakraProvider } from "@chakra-ui/react";
 
+export type Mode = "None" | "Alone" | "Together";
+
 function App() {
   const [myId, setMyId] = useState<string | null>(null);
   // const [firentId, setFriendId] = useState<String|null>(null)
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [mode, setMode] = useState<Mode>("None");
   return (
     <ChakraProvider>
       <div
@@ -21,9 +24,20 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={<Start setMyId={setMyId} setRoomId={setRoomId} />}
+            element={
+              <Start
+                setMyId={setMyId}
+                setRoomId={setRoomId}
+                setMode={setMode}
+              />
+            }
           />
-          <Route path="/play" element={<Play roomId={roomId} myId={myId} />} />
+          <Route
+            path="/play"
+            element={
+              <Play roomId={roomId} myId={myId} mode={mode} setMode={setMode} />
+            }
+          />
           <Route path="*" element={<NotFound />} />
           <Route path="/video" element={<VideoSample />} />
         </Routes>

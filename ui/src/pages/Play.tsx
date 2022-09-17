@@ -28,7 +28,8 @@ import {
 } from "../lib/lib";
 import { default as ml5, Pose, PosePose } from "ml5";
 import * as WebSocket from "websocket";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Mode } from "../App";
 
 const ballBasesWorld: Matter.ICollisionFilter = {
   category: 0b01,
@@ -174,11 +175,24 @@ const ballOption = {
 export const Play: React.FC<{
   myId: string | null;
   roomId: string | null;
-}> = ({ myId, roomId, friendId }) => {
-  // let query = useQuery();
+  mode: Mode;
+  setMode: (mode: Mode) => void;
+}> = ({ myId, roomId, mode, setMode }) => {
   const { search } = useLocation();
   const query2 = new URLSearchParams(search);
-  const room = query2.get("room");
+  const roomIdFromParam = query2.get("room");
+  const navigate = useNavigate();
+  if (roomIdFromParam !== roomId) {
+    // 個人モードここで実装
+    navigate("/");
+  }
+  if (roomId) {
+    var searchParams = new URLSearchParams(window.location.search);
+    searchParams.set("room", roomId);
+    window.location.search = searchParams.toString();
+  } else {
+    // no room, 個人プレイ mode
+  }
   // console.log(search);
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -258,18 +272,21 @@ export const Play: React.FC<{
   };
   // useEffect once
   useEffect(() => {
-    const socket = new WebSocket.w3cwebsocket(SOCKET_URL);
-    globalSocket = socket;
-    console.log("use effect");
-    socket.onopen = () => {
-      console.log("connected");
-    };
-    socket.onclose = () => {
-      console.log("reconnecting...");
-    };
-    socket.onerror = (err) => {
-      console.log("connection error:", err);
-    };
+    let socket;
+    if (mode === "Together") {
+      socket = new WebSocket.w3cwebsocket(SOCKET_URL);
+      globalSocket = socket;
+      console.log("use effect");
+      socket.onopen = () => {
+        console.log("connected");
+      };
+      socket.onclose = () => {
+        console.log("reconnecting...");
+      };
+      socket.onerror = (err) => {
+        console.log("connection error:", err);
+      };
+    }
 
     const engine = Engine.create({});
     globalEngine = engine;
@@ -432,17 +449,21 @@ export const Play: React.FC<{
         poseNet.on("pose", function (poses: PosePose[]) {
           let position = findPosition(poses, videoConstraints.width);
           setPosition(position ?? 0.5);
-          const info: PositionInfo = {
-            user_id: myId,
-            position_x: position ?? 0.5,
-            room_status: "Playing",
-          };
-          // create DTO
-          // globalSocket.send(JSON.stringify(""));
+          if (mode === "Together") {
+            const info: PositionInfo = {
+              user_id: myId,
+              position_x: position ?? 0.5,
+              room_status: "Playing",
+            };
+            // create DTO
+            // globalSocket.send(JSON.stringify(""));
+          }
         });
-        globalSocket.onmessage = (msg) => {
-          console.log(msg);
-        };
+        if (mode === "Together") {
+          globalSocket.onmessage = (msg) => {
+            console.log(msg);
+          };
+        }
       };
       f();
     }
