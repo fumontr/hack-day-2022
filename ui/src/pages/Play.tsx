@@ -191,7 +191,7 @@ export const Play = () => {
     const { width, height } = position;
     const LINE_WIDTH = height * 0.0075;
     const coords = {
-      origin: { x: 0.12, y: 0.75 },
+      origin: { x: 0.14, y: 0.75 },
       // origin: { x: 0.05, y: 0.2 }, // for debug
       size: { height: height * 0.07, width: height * 0.12 },
     };
@@ -328,7 +328,7 @@ export const Play = () => {
       setBases(baseObjects);
 
       // TODO: 割合でやる
-      const ball = Bodies.circle(150, 0, 20, ballOption);
+      const ball = Bodies.circle(width * 0.2, 0, height * 0.025, ballOption);
       setCurrentBall(ball);
 
       Composite.add(engine.world, [
@@ -439,7 +439,12 @@ export const Play = () => {
           <img
             src={ManBack}
             alt=""
-            style={{ height: "100%", width: "100%", objectFit: "contain" }}
+            style={{
+              height: "100%",
+              width: "100%",
+              objectFit: "contain",
+              opacity: position !== 0.5 ? "1" : "0.3",
+            }}
           />
         </div>
       </div>
@@ -447,7 +452,13 @@ export const Play = () => {
         <button
           className="debug-btn"
           onClick={() => {
-            const ball = Bodies.circle(150, 0, 20, ballOption);
+            const ball = Bodies.circle(
+              displaySize.width * 0.2,
+              0,
+              displaySize.height * 0.025,
+              ballOption
+            );
+
             World.add(globalEngine.world, [ball]);
             setCurrentBall(ball);
           }}
