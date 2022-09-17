@@ -12,7 +12,7 @@ import {
   Button,
 } from "@chakra-ui/react";
 import { Flex, HStack, Text, Stack } from "@chakra-ui/react";
-import BackgroundImage from "assets/background.png";
+import BackgroundImage from "../assets/background.png";
 
 export const Start: React.FC<{
   setMyId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -71,7 +71,6 @@ export const Start: React.FC<{
               fontWeight="bold"
               color="#86E2FF"
               borderBottom="4px"
-              background="white"
             >
               シーソーオンライン
             </Text>
