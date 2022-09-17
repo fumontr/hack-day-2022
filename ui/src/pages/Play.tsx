@@ -132,10 +132,28 @@ const FRICTION_STATIC = 0;
 const FRICTION = 0;
 const RESTITUTION = 0;
 
+const BALL_MASS = 100;
+
+const SEESAW_MASS = 10000;
+const SEESAW_INERTIA = 1000000;
+
+const FORCE_FACTOR = 0.18;
+
 let seesaw: Body;
 let globalEngine: Engine;
 let poseNet;
 let count = 0;
+
+const ballOption = {
+  restitution: RESTITUTION,
+  frictionStatic: FRICTION_STATIC,
+  friction: FRICTION,
+  mass: BALL_MASS,
+  render: {
+    fillStyle: "skyblue",
+  },
+  collisionFilter: ballBasesWorld,
+};
 
 export const Play = () => {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -165,7 +183,7 @@ export const Play = () => {
       Body.applyForce(
         seesaw as Body,
         Vector.create(0, 0),
-        Vector.create(0, (position - 0.5) / 10)
+        Vector.create(0, (position - 0.5) * FORCE_FACTOR)
       );
     }
   }, [position]);
@@ -173,13 +191,13 @@ export const Play = () => {
     const { width, height } = position;
     const LINE_WIDTH = 6;
     const coords = {
-      // origin: { x: 0.14, y: 0.65 },
-      origin: { x: 0.05, y: 0.2 },
-      size: { height: height * 0.09, width: height * 0.14 },
+      origin: { x: 0.12, y: 0.75 },
+      // origin: { x: 0.05, y: 0.2 },
+      size: { height: height * 0.07, width: height * 0.12 },
     };
     const options = {
       isStatic: true,
-      render: { fillStyle: "gold" },
+      render: { fillStyle: "orange" },
       collisionFilter: ballBasesWorld,
       frictionStatic: FRICTION_STATIC,
       friction: FRICTION,
@@ -216,6 +234,10 @@ export const Play = () => {
     Events.on(engine, "beforeUpdate", () => {
       if (seesaw) {
         setCurrentAngle(seesaw.angle);
+        if ((currentBall?.position.y ?? 0) >= 500000) {
+          console.log(currentBall?.position.y, displaySize.height);
+          console.log("kesu");
+        }
       }
     });
     if (boxRef.current && canvasRef.current) {
@@ -236,10 +258,10 @@ export const Play = () => {
         },
       });
       const baseCoordinates: [x: number, y: number][] = [
-        [0.45, 0.1],
-        [0.55, 0.25],
-        [0.45, 0.4],
-        [0.55, 0.55],
+        [0.45, 0.15],
+        [0.55, 0.3],
+        [0.45, 0.45],
+        [0.55, 0.66],
       ];
 
       const baseObjects = baseCoordinates.map(([x, y]) => {
@@ -247,9 +269,9 @@ export const Play = () => {
           isStatic: true,
           render: { fillStyle: "#060a19" },
           collisionFilter: ballBasesWorld,
-          frictionStatic: 0.5,
-          friction: 0,
-          restitution: 0.7,
+          frictionStatic: FRICTION_STATIC,
+          friction: FRICTION,
+          restitution: RESTITUTION,
         });
       });
 
@@ -304,6 +326,8 @@ export const Play = () => {
         {
           render: { fillStyle: "gold" },
           collisionFilter: seesawFLoorWorld,
+          mass: SEESAW_MASS,
+          inertia: SEESAW_INERTIA,
         }
       );
       Body.setAngle(seesawStick, deg2rad(0));
@@ -311,16 +335,7 @@ export const Play = () => {
       setBases(baseObjects);
 
       // TODO: 割合でやる
-      const ball = Bodies.circle(150, 0, 20, {
-        restitution: 0.6,
-        frictionStatic: 0.5,
-        friction: 0.7,
-        mass: 100,
-        render: {
-          fillStyle: "skyblue",
-        },
-        collisionFilter: ballBasesWorld,
-      });
+      const ball = Bodies.circle(150, 0, 20, ballOption);
       setCurrentBall(ball);
 
       Composite.add(engine.world, [
@@ -417,9 +432,12 @@ export const Play = () => {
               displaySize.height * 0.1 +
               Math.sin(currentAngle) * displaySize.width * (position - 0.5),
             left: `${
-              (document.body.clientWidth - displaySize.width) / 2 +
-              displaySize.width / 2 +
-              (0.5 - position) * displaySize.width
+              Math.round(
+                ((document.body.clientWidth - displaySize.width) / 2 +
+                  displaySize.width / 2 +
+                  (0.5 - position) * displaySize.width) *
+                  1
+              ) / 1
             }px`,
             height: "80px",
             transform: "translateX(-50%)",
@@ -433,30 +451,17 @@ export const Play = () => {
           />
         </div>
       </div>
-      <div style={{ zIndex: "99999", position: "absolute", top: 0, left: 0 }}>
+      <div style={{ zIndex: "999999", position: "absolute", top: 0, left: 0 }}>
         <button
           className="debug-btn"
           onClick={() => {
-            const ball = Bodies.circle(150, 0, 20, {
-              restitution: 0.9,
-              render: {
-                fillStyle: "skyblue",
-              },
-              collisionFilter: ballBasesWorld,
-            });
+            const ball = Bodies.circle(150, 0, 20, ballOption);
             World.add(globalEngine.world, [ball]);
             setCurrentBall(ball);
           }}
         >
           add ball
         </button>
-        <p style={{ background: "pink", border: "2px solid red" }}>
-          {Math.round(position * 100) / 100 ? (
-            1 - Math.round(position * 100) / 100
-          ) : (
-            <span style={{ fontSize: "36px" }}>out of range!!</span>
-          )}
-        </p>
       </div>
       <div
         className="cameraContainer"
