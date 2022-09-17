@@ -22,6 +22,16 @@ import Webcam from "react-webcam";
 import { deg2rad, rad2deg } from "../lib/lib";
 import { default as ml5, Pose, PosePose } from "ml5";
 
+const ballBasesWorld: Matter.ICollisionFilter = {
+  category: 0b01,
+  mask: 0b01,
+};
+
+const seesawFLoorWorld: Matter.ICollisionFilter = {
+  category: 0b10,
+  mask: 0b10,
+};
+
 export interface ContainerSize {
   width: number;
   height: number;
@@ -197,9 +207,10 @@ export const Play = () => {
         return Bodies.rectangle(width * x, height * y, BAR_WIDTH, BAR_HEIGHT, {
           isStatic: true,
           render: { fillStyle: "#060a19" },
+          collisionFilter: { group: 7 },
         });
       });
-      const seesawGroup = Body.nextGroup(true);
+
       const floor = Bodies.rectangle(
         width / 2,
         height - 10,
@@ -208,24 +219,22 @@ export const Play = () => {
         {
           isStatic: true,
           render: { fillStyle: "tomato" },
-          collisionFilter: { group: seesawGroup },
+          collisionFilter: seesawFLoorWorld,
         }
       );
 
-      // var catapult = Bodies.rectangle(400, 520, 320, 20, { collisionFilter: { group: group } });
-      const catapult = Bodies.rectangle(
+      const seesawStick = Bodies.rectangle(
         width / 2,
         height * 0.9,
         width * 0.85,
         10,
         {
           render: { fillStyle: "gold" },
-          collisionFilter: { group: seesawGroup },
+          collisionFilter: seesawFLoorWorld,
         }
       );
-      Body.setAngle(catapult, deg2rad(0));
-      // setSeesaw(catapult);
-      seesaw = catapult;
+      Body.setAngle(seesawStick, deg2rad(0));
+      seesaw = seesawStick;
       setBases(baseObjects);
 
       const ball = Bodies.circle(150, 0, 20, {
@@ -233,14 +242,15 @@ export const Play = () => {
         render: {
           fillStyle: "skyblue",
         },
+        collisionFilter: ballBasesWorld,
       });
       Composite.add(engine.world, [
         ...baseObjects,
         floor,
-        catapult,
+        seesawStick,
         Constraint.create({
-          bodyA: catapult,
-          pointB: Vector.clone(catapult.position),
+          bodyA: seesawStick,
+          pointB: Vector.clone(seesawStick.position),
           stiffness: 1,
           length: 0,
         }),
@@ -344,6 +354,7 @@ export const Play = () => {
               render: {
                 fillStyle: "skyblue",
               },
+              collisionFilter: ballBasesWorld,
             });
             World.add(globalEngine.world, [ball]);
           }}
