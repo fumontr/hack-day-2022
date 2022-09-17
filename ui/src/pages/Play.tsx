@@ -15,7 +15,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { deg2rad } from "../lib/lib";
+import { deg2rad, rad2deg } from "../lib/lib";
 
 export interface ContainerSize {
   width: number;
@@ -23,6 +23,7 @@ export interface ContainerSize {
 }
 
 window.rotate = Body.rotate;
+window.setAngle = Body.setAngle;
 
 export const Play = () => {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -50,7 +51,7 @@ export const Play = () => {
       height = clientHeight;
       width = clientHeight * (4 / 3);
     }
-    if (boxRef.current && canvasRef.current) {
+    if (boxRef.current && canvasRef.current && !rendered) {
       console.log("o");
       setRendered(true);
       let render = Render.create({
@@ -63,10 +64,10 @@ export const Play = () => {
         },
       });
       console.log({ width, height });
-      const BAR_WIDTH = width * 0.6;
+      const BAR_WIDTH = width * 0.5;
       const BAR_HEIGHT = 3;
       const base1 = Bodies.rectangle(
-        width * 0.85,
+        width * 0.6,
         height * 0.1,
         BAR_WIDTH,
         BAR_HEIGHT,
@@ -76,7 +77,7 @@ export const Play = () => {
         }
       );
       const base2 = Bodies.rectangle(
-        width * 0.15,
+        width * 0.4,
         height * 0.2,
         BAR_WIDTH,
         BAR_HEIGHT,
@@ -86,7 +87,7 @@ export const Play = () => {
         }
       );
       const base3 = Bodies.rectangle(
-        width * 0.85,
+        width * 0.6,
         height * 0.4,
         BAR_WIDTH,
         BAR_HEIGHT,
@@ -96,7 +97,7 @@ export const Play = () => {
         }
       );
       const base4 = Bodies.rectangle(
-        width * 0.15,
+        width * 0.4,
         height * 0.6,
         BAR_WIDTH,
         BAR_HEIGHT,
