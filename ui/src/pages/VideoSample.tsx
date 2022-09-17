@@ -1,44 +1,57 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import Webcam from "react-webcam";
 import { default as ml5, Pose, PosePose } from "ml5";
+import * as WebSocket from "websocket";
 
 const videoConstraints = {
   width: 720,
   height: 360,
   facingMode: "user",
+  frameRate: { ideal: 3, max: 3 }
 };
 
+const SOCKET_URL = "wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/ws";
+
 export const VideoSample = () => {
+  const socket = new WebSocket.w3cwebsocket(SOCKET_URL);
   const webcamRef = useRef<Webcam>(null);
   let poseNet;
 
-  useEffect(() => {
+  useEffect(() => { 
+    console.log("use effect");
+    socket.onopen = () => {
+      console.log("connected");
+    };
+    socket.onclose = () => {
+      console.log("reconnecting...");
+    };
+    socket.onerror = (err) => {
+      console.log("connection error:", err);
+    };
+
     const modelLoaded = () => {
-      if (!webcamRef.current?.video) return;
       const { width, height } = videoConstraints;
       webcamRef.current.video.width = width;
       webcamRef.current.video.height = height;
-      const detectionInterval = setInterval(() => {
+      detectionInterval = setInterval(() => {
         return () => {
           if (detectionInterval) {
             clearInterval(detectionInterval);
           }
-        };
-      }, 200);
+        }
+      }, 1000);
     };
-    const f = async () => {
-      poseNet = await ml5.poseNet(
-        webcamRef.current?.video,
-        "single",
-        modelLoaded
-      );
-      poseNet.on("pose", function (poses: PosePose[]) {
-        let position = findPositon(poses, videoConstraints.width);
-        console.log(position);
-      });
+
+    poseNet = ml5.poseNet(webcamRef.current.video, modelLoaded);
+    poseNet.on('pose', function(results) {
+      let position = findPositon(results, videoConstraints.width);
+      console.log(position)
+      socket.send(position);
+    });
+    socket.onmessage = (msg) => {
+      console.log(msg);
     };
-    f();
-  }, []);
+  } , []);
 
   return (
     <>
