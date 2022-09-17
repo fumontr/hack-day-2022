@@ -1,4 +1,4 @@
-import Matter, {
+import {
   Engine,
   Render,
   World,
@@ -7,12 +7,22 @@ import Matter, {
   Composite,
   Runner,
 } from "matter-js";
-import React, { Ref, RefObject, useEffect, useRef, useState } from "react";
+import React, {
+  Ref,
+  RefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { deg2rad } from "../lib/lib";
 
 export interface ContainerSize {
   width: number;
   height: number;
 }
+
+window.rotate = Body.rotate;
 
 export const Play = () => {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -21,10 +31,14 @@ export const Play = () => {
     undefined
   );
   const [scene, setScene] = useState<Render | undefined>(undefined);
+  const [currentAngle, setCurrentAngle] = useState<number>(0);
   const STATIC_DENSITY = 15;
+  const [engine] = useState(Engine.create({}));
+  const [bases, setBases] = useState<Matter.Body[]>([]);
+  const [rendered, setRendered] = useState(false);
 
-  const fitScreen = (boxRef: RefObject<HTMLDivElement>) => {
-    if (!boxRef?.current) return;
+  useEffect(() => {
+    // fitScreen(boxRef);
     const clientWidth = boxRef.current.clientWidth;
     const clientHeight = boxRef.current.clientHeight;
     let width, height;
@@ -35,28 +49,9 @@ export const Play = () => {
       height = clientHeight;
       width = clientHeight * (4 / 3);
     }
-    setContainerSize({ width, height });
-  };
-
-  const rowsFactory = ({ width, height }: ContainerSize): Body[] => {
-    return [];
-  };
-
-  const floor = Bodies.rectangle(0, 0, 0, 100, {
-    isStatic: true,
-    render: {
-      fillStyle: "blue",
-    },
-  });
-  const wall1 = Bodies.rectangle(100, 200, 400, 20, {
-    isStatic: true,
-    angle: Math.PI * 0.06,
-    render: { fillStyle: "#060a19" },
-  });
-
-  useEffect(() => {
     if (boxRef.current && canvasRef.current) {
-      let engine = Engine.create({});
+      console.log("o");
+      setRendered(true);
       let render = Render.create({
         element: boxRef.current,
         engine: engine,
@@ -66,13 +61,25 @@ export const Play = () => {
           wireframes: false,
         },
       });
+      console.log({ width, height });
+      const base1 = Bodies.rectangle(width * 0.5, height * 0.1, 400, 20, {
+        isStatic: true,
+        render: { fillStyle: "#060a19" },
+      });
+      const base2 = Bodies.rectangle(width * 0.6, height * 0.3, 400, 20, {
+        isStatic: true,
+        render: { fillStyle: "#060a19" },
+      });
+      const base3 = Bodies.rectangle(width * 0.6, height * 0.5, 400, 20, {
+        isStatic: true,
+        render: { fillStyle: "#060a19" },
+      });
+      const base4 = Bodies.rectangle(width * 0.6, height * 0.6, 400, 20, {
+        isStatic: true,
+        render: { fillStyle: "#060a19" },
+      });
 
-      // const floor = Bodies.rectangle(0, 0, 0, 100, {
-      //   isStatic: true,
-      //   render: {
-      //     fillStyle: "blue",
-      //   },
-      // });
+      setBases([base1, base2, base3, base4]);
 
       const ball = Bodies.circle(150, 0, 20, {
         restitution: 0.9,
@@ -80,26 +87,11 @@ export const Play = () => {
           fillStyle: "skyblue",
         },
       });
-      Composite.add(engine.world, [
-        wall1,
-        // Bodies.rectangle(300, 560, 600, 20, {
-        //   isStatic: true,
-        //   angle: Math.PI * 0.04,
-        //   render: { fillStyle: "#060a19" },
-        // }),
-        // Bodies.rectangle(500, 350, 650, 20, {
-        //   isStatic: true,
-        //   angle: -Math.PI * 0.06,
-        //   render: { fillStyle: "#060a19" },
-        // }),
-      ]);
-
-      World.add(engine.world, [floor, ball]);
+      Composite.add(engine.world, [base1, base2, base3, base4]);
+      World.add(engine.world, [ball]);
 
       Runner.run(engine);
       Render.run(render);
-
-      fitScreen(boxRef);
       setScene(render);
     }
     return () => {
@@ -108,8 +100,18 @@ export const Play = () => {
   }, []);
 
   useEffect(() => {
-    if (containerSize && scene) {
-      let { width, height } = containerSize;
+    if (scene) {
+      const clientWidth = boxRef.current.clientWidth;
+      const clientHeight = boxRef.current.clientHeight;
+      let width, height;
+      if (clientHeight > (clientWidth * 3) / 4) {
+        width = clientWidth;
+        height = clientWidth * (3 / 4);
+      } else {
+        height = clientHeight;
+        width = clientHeight * (4 / 3);
+      }
+      console.log("a");
       // Dynamically update canvas and bounds
       scene.bounds.max.x = width;
       scene.bounds.max.y = height;
@@ -118,40 +120,50 @@ export const Play = () => {
       scene.canvas.width = width;
       scene.canvas.height = height;
     }
-  }, [scene, containerSize]);
+  }, [scene]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      console.log("1");
-      // NOTE: 9度にします！最大！
-      Matter.Body.rotate(wall1, 0.01);
-      // Matter.Body.setAngle(wall1, deg2rad(-9));
-    }, 100);
-
-    return () => {
-      clearInterval(timer);
-    };
-  }, []);
-
-  const handleResize = () => {
-    fitScreen(boxRef);
-  };
   return (
-    <div
-      ref={boxRef}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        border: "2px solid blue",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <canvas id="mainCanvas" ref={canvasRef} />
-    </div>
+    <>
+      <div
+        ref={boxRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          border: "2px solid blue",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <canvas id="mainCanvas" ref={canvasRef} style={{ zIndex: 10 }} />
+      </div>
+      <div style={{ zIndex: "99999", position: "absolute", top: 0, left: 0 }}>
+        <button
+          className="debug-btn"
+          onClick={() => {
+            window.rotate(bases[0], 0.1);
+            window.rotate(bases[1], 0.1);
+            window.rotate(bases[2], 0.1);
+            window.rotate(bases[3], 0.1);
+          }}
+        >
+          +
+        </button>
+        <button
+          className="debug-btn"
+          onClick={() => {
+            window.rotate(bases[0], -0.1);
+            window.rotate(bases[1], -0.1);
+            window.rotate(bases[2], -0.1);
+            window.rotate(bases[3], -0.1);
+          }}
+        >
+          -
+        </button>
+      </div>
+    </>
   );
 };
