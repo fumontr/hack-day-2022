@@ -172,9 +172,8 @@ const ballOption = {
 };
 
 export const Play: React.FC<{
-  myId: number;
-  roomId: string;
-  friendId: number;
+  myId: string | null;
+  roomId: string | null;
 }> = ({ myId, roomId, friendId }) => {
   // let query = useQuery();
   const { search } = useLocation();
