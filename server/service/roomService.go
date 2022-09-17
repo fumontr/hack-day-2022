@@ -35,3 +35,12 @@ func DeleteRoom(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func GetRooms(ctx context.Context) ([]model.Room, error) {
+	rooms, err := repository.GetRooms(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return rooms, err
+}

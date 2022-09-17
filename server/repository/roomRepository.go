@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"furiko/hack-day-2022/model"
+	"google.golang.org/api/iterator"
 	"google.golang.org/appengine/log"
 )
 
@@ -57,4 +58,27 @@ func DeleteRoom(ctx context.Context, id string) error {
 		return err
 	}
 	return nil
+}
+
+func GetRooms(ctx context.Context) ([]model.Room, error) {
+	iter := client.Collection("rooms").Documents(ctx)
+	var resp []model.Room
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Errorf(ctx, "get all dlog error: %v", err)
+			break
+		}
+		var d model.Room
+		err = doc.DataTo(&d)
+		if err != nil {
+			log.Errorf(ctx, "bind to dlog error: %v", err)
+			continue
+		}
+		resp = append(resp, d)
+	}
+	return resp, nil
 }

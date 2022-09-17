@@ -38,6 +38,10 @@ func main() {
 		e.POST("/rooms/:id/exit", handler.ExitRoom)
 		// 部屋を消す
 		e.DELETE("/rooms/:id", handler.DeleteRoom)
+		// 部屋の情報を取得
+		e.GET("/rooms/:id", handler.GetRoom)
+		// 全部屋の情報を取得
+		e.GET("/rooms", handler.GetRooms)
 	}
 
 	// 環境変数からEnvを取得する
