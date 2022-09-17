@@ -121,7 +121,7 @@ func ExitRoom(c echo.Context) error {
 	}
 
 	if userNotExist {
-		return c.JSON(http.StatusBadRequest, fmt.Sprintf("user: %v is not exist in %v", id, room.ID))
+		return c.JSON(http.StatusBadRequest, fmt.Sprintf("user: %v is not exist in %v", req.UserID, room.ID))
 	}
 
 	newUserCount := room.UserCount - 1
@@ -129,12 +129,19 @@ func ExitRoom(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("exit room %v failed", room.ID))
 	}
 
+	var remainUsers []model.User
+	for _, v := range users {
+		if v.ID != req.UserID {
+			remainUsers = append(remainUsers, v)
+		}
+	}
+
 	nr := model.Room{
 		ID:        room.ID,
 		UserCount: newUserCount,
 		Password:  room.Password,
 		Status:    room.Status,
-		Users:     users,
+		Users:     remainUsers,
 	}
 
 	return c.JSON(http.StatusOK, nr)
