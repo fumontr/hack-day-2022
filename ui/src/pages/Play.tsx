@@ -30,7 +30,7 @@ import { default as ml5, Pose, PosePose } from "ml5";
 import * as WebSocket from "websocket";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Mode } from "../App";
-import { useDisclosure } from "@chakra-ui/react";
+import { Button, useDisclosure } from "@chakra-ui/react";
 import { BeforeStartPendingModal } from "../components/BeforeStartPendingModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { FailureModal } from "../components/FailureModal";
@@ -284,8 +284,8 @@ export const Play: React.FC<{
     const { width, height } = position;
     const LINE_WIDTH = height * 0.0075;
     const coords = {
-      // origin: { x: 0.14, y: 0.75 },
-      origin: { x: 0.05, y: 0.2 }, // for debug
+      origin: { x: 0.14, y: 0.75 },
+      // origin: { x: 0.05, y: 0.2 }, // for debug
       size: { height: height * 0.07, width: height * 0.12 },
     };
     const options = {
@@ -643,7 +643,7 @@ export const Play: React.FC<{
         displaySize.height * 0.03,
         ballOption
       );
-      World.add(globalEngine.world, [ball]);
+      // World.add(globalEngine.world, [ball]);
       setCurrentBall(ball);
       globalBall = ball;
       // @ts-ignore
@@ -775,12 +775,16 @@ export const Play: React.FC<{
         })}
       </div>
       <div style={{ zIndex: "999999", position: "absolute", top: 0, left: 0 }}>
-        <button
+        <Button
+          variant="outline"
+          colorScheme="teal"
           className="debug-btn"
           onClick={() => {
             const ball = Bodies.circle(
               displaySize.width * 0.2,
               0,
+              // displaySize.width * 0.78,
+              // displaySize.height * 0.45,
               displaySize.height * 0.03,
               ballOption
             );
@@ -791,7 +795,7 @@ export const Play: React.FC<{
           }}
         >
           add ball
-        </button>
+        </Button>
       </div>
       <div
         className="cameraContainer"
@@ -799,10 +803,12 @@ export const Play: React.FC<{
           zIndex: "99999",
           position: "absolute",
           right: 0,
+          top: 0,
+          transformOrigin: "top right",
+          transform: "scale(0.25)",
         }}
       >
         <Webcam
-          style={{ transform: "scale(0.2)" }}
           audio={false}
           width={200}
           height={100}
