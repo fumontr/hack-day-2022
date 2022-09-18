@@ -61,7 +61,7 @@ export const Start: React.FC<{
         setMode={setMode}
       />
       <Flex
-        className="flex p-20 h-screen bg-white"
+        className="flex p-5 h-screen bg-white"
         backgroundImage={BackgroundImage}
         backgroundPosition="center"
         backgroundSize="70%"
@@ -69,11 +69,19 @@ export const Start: React.FC<{
         <Stack w="full">
           <Flex justifyContent="right">
             <Text
-              style={{ transform: "rotate(0.1)" }}
-              fontSize="40px"
-              fontWeight="bold"
-              color="#86E2FF"
-              borderBottom="4px"
+              style={{
+                fontFamily: "'Dela Gothic One', cursive",
+                color: "#222",
+                fontSize: "2.5rem",
+                padding: ".5rem",
+                borderRadius: "7px",
+                border: "solid 3px navy",
+                background: "skyblue",
+                position: "absolute",
+                right: "20px",
+                top: "40px",
+                zIndex: "999",
+              }}
             >
               シーソーオンライン！！！
             </Text>
@@ -81,19 +89,19 @@ export const Start: React.FC<{
           <HStack w="full" h="full">
             <Button
               h="400px"
-              className="bg-gray-300 hover:bg-blue-700 text-black-900 font-bold py-2 px-4 rounded w-full"
-              opacity="0.9"
+              className="bg-gray-300 hover:bg-blue-700 text-black-900 font-bold py-1 px-2 rounded w-full"
+              opacity="0.95"
               onClick={handlePlayAlone}
             >
-              <Text fontSize="4xl">ひとりであそぶ</Text>
+              <Text fontSize="2xl">ひとりであそぶ</Text>
             </Button>
             <Button
               h="400px"
               onClick={onClickRoomCreate}
-              className="bg-gray-300 hover:bg-blue-700 text-black-900 font-bold py-2 px-4 rounded w-full"
+              className="bg-gray-300 hover:bg-blue-700 text-black-900 font-bold py-1 px-2 rounded w-full"
               opacity="0.9"
             >
-              <Text fontSize="4xl">みんなであそぶ</Text>
+              <Text fontSize="2xl">みんなであそぶ</Text>
             </Button>
           </HStack>
           <Flex justifyContent="right">
