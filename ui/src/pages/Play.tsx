@@ -322,6 +322,10 @@ export const Play: React.FC<{
   };
   // useEffect once
   useEffect(() => {
+    // @ts-ignore
+    if (!window.mode || window.mode === "None") {
+      navigate("/");
+    }
     let socket;
     // @ts-ignore
     if (window.mode === "Together") {
@@ -635,7 +639,6 @@ export const Play: React.FC<{
   }, []);
   useEffect(() => {
     // @ts-ignore
-    // @ts-ignore
     if (window.mode === "Alone" || window.mode === "Together") {
       const ball = Bodies.circle(
         displaySize.width * 0.2,
@@ -643,7 +646,7 @@ export const Play: React.FC<{
         displaySize.height * 0.03,
         ballOption
       );
-      // World.add(globalEngine.world, [ball]);
+      World.add(globalEngine.world, [ball]);
       setCurrentBall(ball);
       globalBall = ball;
       // @ts-ignore
