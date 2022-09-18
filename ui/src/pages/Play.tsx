@@ -30,6 +30,8 @@ import { default as ml5, Pose, PosePose } from "ml5";
 import * as WebSocket from "websocket";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Mode } from "../App";
+import {useDisclosure} from "@chakra-ui/react";
+import {ResultModal} from "../components/ResultModal";
 
 const ballBasesWorld: Matter.ICollisionFilter = {
   category: 0b01,
@@ -196,6 +198,13 @@ export const Play: React.FC<{
   mode: Mode;
   setMode: (mode: Mode) => void;
 }> = ({ myId, roomId, mode, setMode }) => {
+
+  const {
+    isOpen: resultOpen,
+    onOpen: onResultOpen,
+    onClose: onResultClose,
+  } = useDisclosure();
+
   // console.log("======");
   // console.log(myId, roomId);
   if (!roomId) {
@@ -391,13 +400,19 @@ export const Play: React.FC<{
             World.remove(globalEngine.world, pair.bodyB);
             setCurrentBall(undefined);
             console.error("failed!");
+            onResultOpen()
+            console.log("open")
           } else if (pair.bodyB.id === floorSensor.id) {
             World.remove(globalEngine.world, pair.bodyA);
             setCurrentBall(undefined);
             console.error("failed!");
+            onResultOpen()
+            console.log("open at b")
           }
           if (pair.bodyA.id === goal[1].id || pair.bodyB.id === goal[1].id) {
             console.warn("clear!");
+            onResultOpen()
+            console.log("open at success")
           }
         }
       });
@@ -521,6 +536,7 @@ export const Play: React.FC<{
 
   return (
     <>
+      <ResultModal result={"Success"} resultOpen={resultOpen} onResultClose={onResultClose} />
       <div
         ref={boxRef}
         style={{
