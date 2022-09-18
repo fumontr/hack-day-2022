@@ -523,6 +523,19 @@ export const Play: React.FC<{
     }
   }, [webcamRef]);
 
+  useEffect(() => {
+    if (mode === "Alone" || mode === "Together") {
+      const ball = Bodies.circle(
+        displaySize.width * 0.2,
+        0,
+        displaySize.height * 0.03,
+        ballOption
+      );
+      World.add(globalEngine.world, [ball]);
+      setCurrentBall(ball);
+    }
+  }, [mode]);
+
   return (
     <>
       <BeforeStartPendingModal

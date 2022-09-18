@@ -26,15 +26,15 @@ export const BeforeStartPendingModal: React.FC<
   const handleStart = () => {
     // setMode to alone or together
     // set this to parent
-    if(mode==="TogetherPending"){
-      setParent(true)
-      setMode("Together")
+    if (mode === "TogetherPending") {
+      setParent(true);
+      setMode("Together");
     }
-    if(mode==="AlonePending"){
-      setMode("Alone")
+    if (mode === "AlonePending") {
+      setMode("Alone");
     }
     // close modal
-    onClosePending()
+    onClosePending();
   };
 
   return (
@@ -43,7 +43,7 @@ export const BeforeStartPendingModal: React.FC<
       closeOnOverlayClick={false}
       isCentered
       size={"xl"}
-      isOpen={pendingOpen || true}
+      isOpen={pendingOpen}
       onClose={onClosePending}
     >
       <ModalOverlay />
