@@ -41,6 +41,7 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
 }) => {
   let navigate = useNavigate();
   const [val, setVal] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const requestOptions = {
     method: "POST",
@@ -48,6 +49,8 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
   };
 
   const close = async () => {
+    setLoading(true);
+
     if (val.length !== 3) return alert("あいことばは３文字で入力してね！");
     // hiragana regex
     if (!/^[\u3040-\u309F]+$/.test(val))
@@ -62,14 +65,21 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
       console.log(data);
       setMyId(data.user.id);
       setRoomId(data.id);
-      setMode("Together");
+      setMode("TogetherPending");
       navigate(`/play`);
     } catch (error) {
       alert(`couldn't fetch room info. ${error}`);
     }
   };
   return (
-    <Modal size={"2xl"} isOpen={enterRoomOpen} onClose={onEnterRoomClose}>
+    <Modal
+      isCentered
+      closeOnEsc={false}
+      closeOnOverlayClick={false}
+      size={"2xl"}
+      isOpen={enterRoomOpen}
+      onClose={onEnterRoomClose}
+    >
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>ひらがな３文字の あいことば を入力</ModalHeader>
@@ -83,7 +93,14 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
           />
         </ModalBody>
         <ModalFooter>
-          <Button type="button" colorScheme="blue" mr={3} onClick={close}>
+          <Button
+            disabled={loading}
+            isLoading={loading}
+            type="button"
+            colorScheme="blue"
+            mr={3}
+            onClick={close}
+          >
             進む
           </Button>
         </ModalFooter>
