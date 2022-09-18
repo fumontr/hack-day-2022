@@ -51,6 +51,10 @@ export type PositionInfo = {
   user_id: string;
   position_x: string;
   room_status: Status;
+  ball: {
+    position_x: string; // as null if ""
+    position_y: string; // same above
+  };
 };
 
 const videoConstraints = {
@@ -74,6 +78,7 @@ const FORCE_FACTOR = 0.18;
 let seesaw: Body;
 let globalEngine: Engine;
 let globalSocket: WebSocket.w3cwebsocket;
+let globalBall: Body | undefined;
 let poseNet;
 let count = 0;
 
@@ -403,6 +408,7 @@ export const Play: React.FC<{
           if (pair.bodyA.id === floorSensor.id) {
             World.remove(globalEngine.world, pair.bodyB);
             setCurrentBall(undefined);
+            globalBall = undefined;
             console.error("failed!1");
             console.log(mode);
             if (mode === "Alone") {
@@ -419,6 +425,7 @@ export const Play: React.FC<{
           } else if (pair.bodyB.id === floorSensor.id) {
             World.remove(globalEngine.world, pair.bodyA);
             setCurrentBall(undefined);
+            globalBall = undefined;
             console.error("failed!2");
             if (mode === "Alone") {
               setMode("AloneFailure");
@@ -523,6 +530,7 @@ export const Play: React.FC<{
         );
         poseNet.on("pose", function (poses: PosePose[]) {
           let position = findPosition(poses, videoConstraints.width);
+          console.log(globalBall?.position);
           setPosition(position ?? 0.5);
           if (
             mode === "Together" &&
@@ -535,6 +543,14 @@ export const Play: React.FC<{
               user_id: myId,
               position_x: position.toString() ?? "0.5",
               room_status: "Playing",
+              ball: {
+                position_x: isParent
+                  ? globalBall?.position.x.toString() ?? ""
+                  : "",
+                position_y: isParent
+                  ? globalBall?.position.y.toString() ?? ""
+                  : "",
+              },
             };
             globalSocket.send(JSON.stringify(info));
             // console.log("sending!");
@@ -555,6 +571,14 @@ export const Play: React.FC<{
               }
               setMates(_mates);
             }
+            if (data.ball.position_x) {
+              if (!isParent) {
+                Body.setPosition(
+                  globalBall as Body,
+                  Vector.create(data.ball.position_x, data.ball.position_y)
+                );
+              }
+            }
           };
         }
       };
@@ -572,6 +596,7 @@ export const Play: React.FC<{
       );
       World.add(globalEngine.world, [ball]);
       setCurrentBall(ball);
+      globalBall = ball;
     } else if (mode === "None") {
       console.log("hihi");
       navigate("/");
@@ -703,6 +728,7 @@ export const Play: React.FC<{
 
             World.add(globalEngine.world, [ball]);
             setCurrentBall(ball);
+            globalBall = ball;
           }}
         >
           add ball
