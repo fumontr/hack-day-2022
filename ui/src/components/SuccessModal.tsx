@@ -25,8 +25,8 @@ export const SuccessModal: React.FC<SuccessModalProp> = ({
   setMode,
   mode,
 }) => {
+  const navigate = useNavigate();
   const handleGoPending = () => {
-    const navigate = useNavigate();
     if (mode === "AloneSuccess") {
       setMode("AlonePending");
     } else if (mode === "TogetherSuccess") {

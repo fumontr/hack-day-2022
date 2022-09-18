@@ -26,10 +26,12 @@ export const FailureModal: React.FC<FailureModalProp> = ({
   setMode,
   mode,
 }) => {
+  const navigate = useNavigate();
   const handleGoPending = () => {
-    const navigate = useNavigate();
     if (mode === "AloneFailure") {
       setMode("AlonePending");
+      // @ts-ignore
+      window.mode = "AlonePending";
     } else if (mode === "TogetherFailure") {
       setMode("TogetherPending");
     } else {

@@ -26,12 +26,17 @@ export const BeforeStartPendingModal: React.FC<
   const handleStart = () => {
     // setMode to alone or together
     // set this to parent
+    console.log(mode);
     if (mode === "TogetherPending") {
       setParent(true);
+      console.log("set together");
       setMode("Together");
     }
     if (mode === "AlonePending") {
+      console.log("set alone");
       setMode("Alone");
+      // @ts-ignore
+      window.mode = "Alone";
     }
     // close modal
     onClosePending();
@@ -58,7 +63,8 @@ export const BeforeStartPendingModal: React.FC<
               alignItems: "center",
             }}
           >
-            <big>ゲームを開始できます</big>&nbsp;&nbsp; <Spinner />
+            <big>カメラが表示されたら、ゲームを開始できます。</big>&nbsp;&nbsp;{" "}
+            <Spinner />
           </p>
         </ModalBody>
         <ModalFooter>

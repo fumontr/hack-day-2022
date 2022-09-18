@@ -214,17 +214,14 @@ export const Play: React.FC<{
     onClose: onFailureClose,
   } = useDisclosure();
 
-  if (!roomId) {
-    console.warn(" no room id ! ");
-  }
-  const { search } = useLocation();
-  const query2 = new URLSearchParams(search);
-  const roomIdFromParam = query2.get("room");
-  if (roomIdFromParam !== roomId) {
-    // 個人モードここで実装
-    // console.log("ざんねん！");
-    // navigate("/");
-  }
+  // const { search } = useLocation();
+  // const query2 = new URLSearchParams(search);
+  // const roomIdFromParam = query2.get("room");
+  // if (roomIdFromParam !== roomId) {
+  //   // 個人モードここで実装
+  //   // console.log("ざんねん！");
+  //   // navigate("/");
+  // }
   // if (roomId) {
   //   var searchParams = new URLSearchParams(window.location.search);
   //   searchParams.set("room", roomId);
@@ -282,8 +279,8 @@ export const Play: React.FC<{
     const { width, height } = position;
     const LINE_WIDTH = height * 0.0075;
     const coords = {
-      origin: { x: 0.14, y: 0.75 },
-      // origin: { x: 0.05, y: 0.2 }, // for debug
+      // origin: { x: 0.14, y: 0.75 },
+      origin: { x: 0.05, y: 0.2 }, // for debug
       size: { height: height * 0.07, width: height * 0.12 },
     };
     const options = {
@@ -406,14 +403,44 @@ export const Play: React.FC<{
           if (pair.bodyA.id === floorSensor.id) {
             World.remove(globalEngine.world, pair.bodyB);
             setCurrentBall(undefined);
-            console.error("failed!");
+            console.error("failed!1");
+            console.log(mode);
+            if (mode === "Alone") {
+              // @ts-ignore
+              window.mode = "AloneFailure";
+              setMode("AloneFailure");
+            } else if (mode === "Together") {
+              setMode("TogetherFailure");
+            } else {
+              console.error("ありえな1");
+              setMode("AloneFailure");
+              // navigate("/");
+            }
           } else if (pair.bodyB.id === floorSensor.id) {
             World.remove(globalEngine.world, pair.bodyA);
             setCurrentBall(undefined);
-            console.error("failed!");
+            console.error("failed!2");
+            if (mode === "Alone") {
+              setMode("AloneFailure");
+            } else if (mode === "Together") {
+              setMode("TogetherFailure");
+            } else {
+              console.error("ありえな2");
+              setMode("AloneFailure");
+              // navigate("/");
+            }
           }
           if (pair.bodyA.id === goal[1].id || pair.bodyB.id === goal[1].id) {
             console.warn("clear!");
+            if (mode === "Alone") {
+              setMode("AloneSuccess");
+            } else if (mode === "Together") {
+              setMode("TogetherSuccess");
+            } else {
+              console.error("ありえな3");
+              setMode("AloneSuccess");
+              // navigate("/");
+            }
           }
         }
       });
@@ -534,7 +561,7 @@ export const Play: React.FC<{
       f();
     }
   }, [webcamRef]);
-
+  const navigate = useNavigate();
   useEffect(() => {
     if (mode === "Alone" || mode === "Together") {
       const ball = Bodies.circle(
@@ -545,6 +572,9 @@ export const Play: React.FC<{
       );
       World.add(globalEngine.world, [ball]);
       setCurrentBall(ball);
+    } else if (mode === "None") {
+      console.log("hihi");
+      navigate("/");
     }
   }, [mode]);
 
