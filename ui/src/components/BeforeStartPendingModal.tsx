@@ -26,13 +26,18 @@ export const BeforeStartPendingModal: React.FC<
   const handleStart = () => {
     // setMode to alone or together
     // set this to parent
-    console.log(mode);
-    if (mode === "TogetherPending") {
+    // @ts-ignore
+    console.log(window.mode);
+    // @ts-ignore
+    if (window.mode === "TogetherPending") {
       setParent(true);
       console.log("set together");
+      // @ts-ignore
+      window.mode = "Together";
       setMode("Together");
     }
-    if (mode === "AlonePending") {
+    // @ts-ignore
+    if (window.mode === "AlonePending") {
       console.log("set alone");
       setMode("Alone");
       // @ts-ignore

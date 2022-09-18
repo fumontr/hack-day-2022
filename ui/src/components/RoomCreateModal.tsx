@@ -66,6 +66,8 @@ export const RoomCreateModal: React.FC<RoomCreateModalProps> = ({
       setMyId(data.user.id);
       setRoomId(data.id);
       setMode("TogetherPending");
+      // @ts-ignore
+      window.mode = "TogetherPending"
       navigate(`/play`);
     } catch (error) {
       alert(`couldn't fetch room info. ${error}`);

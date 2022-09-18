@@ -27,10 +27,16 @@ export const SuccessModal: React.FC<SuccessModalProp> = ({
 }) => {
   const navigate = useNavigate();
   const handleGoPending = () => {
-    if (mode === "AloneSuccess") {
+    // @ts-ignore
+    if (window.mode === "AloneSuccess") {
       setMode("AlonePending");
-    } else if (mode === "TogetherSuccess") {
+      // @ts-ignore
+      window.mode = "AfterPending";
+      // @ts-ignore
+    } else if (window.mode === "TogetherSuccess") {
       setMode("TogetherPending");
+      // @ts-ignore
+      window.mode = "TogetherPending";
     } else {
       console.error("ありえないステート");
     }

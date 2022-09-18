@@ -45,6 +45,8 @@ export const Start: React.FC<{
 
   const handlePlayAlone = () => {
     setMode("AlonePending");
+    // @ts-ignore
+    window.mode = "AlonePending";
     navigate("/play");
   };
 

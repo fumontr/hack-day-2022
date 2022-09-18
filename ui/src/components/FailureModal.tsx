@@ -28,12 +28,16 @@ export const FailureModal: React.FC<FailureModalProp> = ({
 }) => {
   const navigate = useNavigate();
   const handleGoPending = () => {
-    if (mode === "AloneFailure") {
+    // @ts-ignore
+    if (window.mode === "AloneFailure") {
       setMode("AlonePending");
       // @ts-ignore
       window.mode = "AlonePending";
-    } else if (mode === "TogetherFailure") {
+      // @ts-ignore
+    } else if (window.mode === "TogetherFailure") {
       setMode("TogetherPending");
+      // @ts-ignore
+      window.mode = "TogetherPending";
     } else {
       console.error("ありえないステート");
     }

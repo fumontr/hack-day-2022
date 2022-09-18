@@ -249,7 +249,7 @@ export const Play: React.FC<{
     width: 0,
     height: 0,
   });
-
+  const [tick, setTick] = useState<Body | undefined>(undefined);
   const [mates, setMates] = useState<MatesInfo>({});
 
   useEffect(() => {
@@ -323,7 +323,8 @@ export const Play: React.FC<{
   // useEffect once
   useEffect(() => {
     let socket;
-    if (mode === "Together") {
+    // @ts-ignore
+    if (window.mode === "Together") {
       socket = new WebSocket.w3cwebsocket(
         `wss://backend-dot-hack-day-2022-362804.de.r.appspot.com/rooms/${roomId}/connect`
       );
@@ -411,15 +412,21 @@ export const Play: React.FC<{
             globalBall = undefined;
             console.error("failed!1");
             console.log(mode);
-            if (mode === "Alone") {
+            // @ts-ignore
+            if (window.mode === "Alone") {
               // @ts-ignore
               window.mode = "AloneFailure";
               setMode("AloneFailure");
-            } else if (mode === "Together") {
+              // @ts-ignore
+            } else if (window.mode === "Together") {
               setMode("TogetherFailure");
+              // @ts-ignore
+              window.mode = "TogetherFailure";
             } else {
               console.error("ありえな1");
               setMode("AloneFailure");
+              // @ts-ignore
+              window.mode = "AloneFailure";
               // navigate("/");
             }
           } else if (pair.bodyB.id === floorSensor.id) {
@@ -427,25 +434,41 @@ export const Play: React.FC<{
             setCurrentBall(undefined);
             globalBall = undefined;
             console.error("failed!2");
-            if (mode === "Alone") {
+            // @ts-ignore
+            if (window.mode === "Alone") {
               setMode("AloneFailure");
-            } else if (mode === "Together") {
+              // @ts-ignore
+              window.mode = "AloneFailure";
+              // @ts-ignore
+            } else if (window.mode === "Together") {
               setMode("TogetherFailure");
+              // @ts-ignore
+              window.mode = "TogetherFailure";
             } else {
               console.error("ありえな2");
               setMode("AloneFailure");
+              // @ts-ignore
+              window.mode = "AloneFailure";
               // navigate("/");
             }
           }
           if (pair.bodyA.id === goal[1].id || pair.bodyB.id === goal[1].id) {
             console.warn("clear!");
-            if (mode === "Alone") {
+            // @ts-ignore
+            if (window.mode === "Alone") {
               setMode("AloneSuccess");
-            } else if (mode === "Together") {
+              // @ts-ignore
+              window.mode = "AloneSuccess";
+              // @ts-ignore
+            } else if (window.mode === "Together") {
               setMode("TogetherSuccess");
+              // @ts-ignore
+              window.mode = "TogetherSuccess";
             } else {
               console.error("ありえな3");
               setMode("AloneSuccess");
+              // @ts-ignore
+              window.mode = "AloneSuccess";
               // navigate("/");
             }
           }
@@ -530,10 +553,12 @@ export const Play: React.FC<{
         );
         poseNet.on("pose", function (poses: PosePose[]) {
           let position = findPosition(poses, videoConstraints.width);
-          console.log(globalBall?.position);
+          // console.log(globalBall?.position);
           setPosition(position ?? 0.5);
+          console.log(mode);
           if (
-            mode === "Together" &&
+            // @ts-ignore
+            (window.mode === "Together" || window.mode === "TogetherPending") &&
             myId &&
             position &&
             globalSocket
@@ -556,12 +581,15 @@ export const Play: React.FC<{
             // console.log("sending!");
           }
         });
-        if (mode === "Together") {
+
+        // @ts-ignore
+        if (window.mode === "Together") {
           await sleep(1000);
           globalSocket.onmessage = (msg: WebSocket.IMessageEvent) => {
             const data = JSON.parse(msg.data.toString()) as PositionInfo;
             // console.log(data);
             if (data.user_id !== myId) {
+              console.log(data.user_id);
               // mates
               const _mates: MatesInfo = JSON.parse(JSON.stringify(mates));
               if (_mates[data.user_id]) {
@@ -572,10 +600,16 @@ export const Play: React.FC<{
               setMates(_mates);
             }
             if (data.ball.position_x) {
+              setMode("Together");
+              // @ts-ignore
+              window.mode = "Together";
               if (!isParent) {
                 Body.setPosition(
                   globalBall as Body,
-                  Vector.create(data.ball.position_x, data.ball.position_y)
+                  Vector.create(
+                    parseFloat(data.ball.position_x),
+                    parseFloat(data.ball.position_y)
+                  )
                 );
               }
             }
@@ -586,8 +620,23 @@ export const Play: React.FC<{
     }
   }, [webcamRef]);
   const navigate = useNavigate();
+
   useEffect(() => {
-    if (mode === "Alone" || mode === "Together") {
+    const timer = setInterval(() => {
+      // @ts-ignore
+      if (tick !== window.mode) {
+        // @ts-ignore
+        setTick(window.mode);
+      }
+      return () => {
+        clearInterval(timer);
+      };
+    }, 50);
+  }, []);
+  useEffect(() => {
+    // @ts-ignore
+    // @ts-ignore
+    if (window.mode === "Alone" || window.mode === "Together") {
       const ball = Bodies.circle(
         displaySize.width * 0.2,
         0,
@@ -597,29 +646,39 @@ export const Play: React.FC<{
       World.add(globalEngine.world, [ball]);
       setCurrentBall(ball);
       globalBall = ball;
-    } else if (mode === "None") {
+      // @ts-ignore
+    } else if (window.mode === "None") {
       console.log("hihi");
       navigate("/");
     }
-  }, [mode]);
+  }, [tick]);
 
   return (
     <>
       <BeforeStartPendingModal
-        pendingOpen={mode === "AlonePending" || mode === "TogetherPending"}
+        pendingOpen={
+          // @ts-ignore
+          window.mode === "AlonePending" || window.mode === "TogetherPending"
+        }
         setMode={setMode}
         mode={mode}
         onClosePending={onClosePending}
         setParent={setParent}
       />
       <SuccessModal
-        successOpen={mode === "AloneSuccess" || mode === "TogetherSuccess"}
+        successOpen={
+          // @ts-ignore
+          window.mode === "AloneSuccess" || window.mode === "TogetherSuccess"
+        }
         onSuccessClose={onSuccessClose}
         mode={mode}
         setMode={setMode}
       />
       <FailureModal
-        failureOpen={mode === "AloneFailure" || mode === "TogetherFailure"}
+        failureOpen={
+          // @ts-ignore
+          window.mode === "AloneFailure" || window.mode === "TogetherFailure"
+        }
         onFailureClose={onFailureClose}
         mode={mode}
         setMode={setMode}
