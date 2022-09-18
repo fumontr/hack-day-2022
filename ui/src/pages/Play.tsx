@@ -32,6 +32,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Mode } from "../App";
 import { useDisclosure } from "@chakra-ui/react";
 import { BeforeStartPendingModal } from "../components/BeforeStartPendingModal";
+import { SuccessModal } from "../components/SuccessModal";
+import { FailureModal } from "../components/FailureModal";
 
 const ballBasesWorld: Matter.ICollisionFilter = {
   category: 0b01,
@@ -200,6 +202,16 @@ export const Play: React.FC<{
     isOpen: pendingOpen,
     onOpen: onPendingOpen,
     onClose: onClosePending,
+  } = useDisclosure();
+  const {
+    isOpen: successOpen,
+    onOpen: onSuccessOpen,
+    onClose: onSuccessClose,
+  } = useDisclosure();
+  const {
+    isOpen: failureOpen,
+    onOpen: onFailureOpen,
+    onClose: onFailureClose,
   } = useDisclosure();
 
   if (!roomId) {
@@ -544,6 +556,18 @@ export const Play: React.FC<{
         mode={mode}
         onClosePending={onClosePending}
         setParent={setParent}
+      />
+      <SuccessModal
+        successOpen={mode === "AloneSuccess" || mode === "TogetherSuccess"}
+        onSuccessClose={onSuccessClose}
+        mode={mode}
+        setMode={setMode}
+      />
+      <FailureModal
+        failureOpen={mode === "AloneFailure" || mode === "TogetherFailure"}
+        onFailureClose={onFailureClose}
+        mode={mode}
+        setMode={setMode}
       />
       <div
         ref={boxRef}

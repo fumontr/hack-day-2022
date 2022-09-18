@@ -13,8 +13,10 @@ export type Mode =
   | "TogetherPending"
   | "Alone" // while playing
   | "Together" // while playing
-  | "Failure"
-  | "Success";
+  | "AloneFailure"
+  | "AloneSuccess"
+  | "TogetherFailure"
+  | "TogetherSuccess";
 
 function App() {
   const [myId, setMyId] = useState<string | null>(null);
