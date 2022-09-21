@@ -1,6 +1,12 @@
+# 現在BackendのProdはデプロイされていません
+開発環境をローカルで立ち上げて動かすことはできますが、2人以上プレイは現在遊べません。
+
+<details>
+<summary>過去のREADME</summary>
+
 # server
 
-パンの耳のバックエンドです。。
+パンの耳のバックエンドです。
 
 ## API
 - POST /rooms
@@ -12,7 +18,7 @@
 - POST /rooms/:id/exit
   - RoomIdを渡して部屋から出る。
   - 0人以下になる場合はエラーを返す。
-- DELETE /rooms/:id 
+- DELETE /rooms/:id
   - 必要無くなった部屋を削除する。
 
 ## Local 起動方法
@@ -33,15 +39,15 @@ brew install httpie
 
 - 環境変数を設定
   - Dev: development
-  
-### サーバの起動 
+
+### サーバの起動
 ```bash
 make build
 make run
 ```
 
 ### サーバを叩いてみる
-- REST 
+- REST
 ```bash
 http :8080/ # httpieの利用を想定
 ```
@@ -50,3 +56,5 @@ http :8080/ # httpieの利用を想定
 ```bash
 wscat -c ws://localhost:8080/ws # wscatの利用を想定    
 ```
+
+</details>
